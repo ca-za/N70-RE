@@ -38,7 +38,9 @@
 - Tools named in those blogs: the Wuqi **UI/packaging tool** (imports `.wpk`, exports the OTA `.bin` – the step that encrypts) and the production flasher **`Wuqi.Beetle.Burn.exe`** (single-wire UART, BOOT→VDD). SDK version seen: `sdk_tws_6.1.0.295` (scons build).
 - Unofficial mirrors exist of the burn/UI tool ([gitcode 5cec4](https://gitcode.com/open-source-toolkit/5cec4)) and of the "WQ7034-WQ7033 native SDK source" (CSDN "free share", 2025) – almost certainly **unauthorised redistribution of proprietary NDA software, unverified, Windows binaries**. Not downloaded.
 
-**Decryption research conclusion (2026-11-10):** No public firmware key, decryptor, `.wpk` unpacker, or firmware dump exists for WQ7033 on GitHub, CSDN, GitCode, 4PDA or RuTracker. The ecosystem (SDK, OTA source `app_wqota.c`, packaging/flash tools) is real but **NDA-only**; the only public copies are unauthorised leaks. The one static lever that could reveal the cipher/key would be the leaked SDK + packaging tool, read-only – see [ideas.md](ideas.md).
+**WuQi ADK source (public GitHub):** [qqq5127/ZT210](https://github.com/qqq5127/ZT210) – a full WuQi `wq-adk` source tree for a WQ703X TWS product (not the N70, but the same SDK family). Key files that cracked the firmware format: `core0/src/lib/ota/{inc/ota.h,src/ota.c}` (package magic `0xABCD6543`, `pack_desc_t`/`image_desc` structs, CRC-only verify), `core0/src/app/tws/user_app/app_wqota.c` (`ota_file_header_t`, OTA_VID 0x076E / OTA_PID 0x7033), `core0/tools/SCons/firmware_package.py` (the `.wpk` is a plain ZIP), `core0/src/lib/utils/src/crc.c` (standard CRC-32). This showed the OTA image is **LZMA-compressed, not encrypted** → [firmware.md](firmware.md).
+
+**Decryption "research" conclusion (2026-11-10):** moot – the image was never encrypted. For the record: no WQ7033 firmware key/decryptor was found on CSDN/GitCode/4PDA/RuTracker (nor needed). The NDA SDK + Windows packaging/flash tools (`Wuqi.Beetle.Burn.exe`) exist but we did not use them; the readable source above came from public GitHub.
 
 ## Contradictions between the sources
 

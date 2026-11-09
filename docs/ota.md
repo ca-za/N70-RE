@@ -1,8 +1,8 @@
 # OTA / Wuqi service 7033
 
-Source: static analysis of the QCY app 4.0.7 Wuqi SDK (`org/wuqi/android/...`). **Source only, nothing here was sent to the device.** Service `7033` is write-protected by our rules — this document is for understanding, not for sending.
+Source: static analysis of the QCY app 4.0.7 Wuqi SDK (`org/wuqi/android/...`), cross-checked against the device-side WuQi ADK source on GitHub ([qqq5127/ZT210](https://github.com/qqq5127/ZT210)). **Source only, nothing here was sent to the device.** Service `7033` is write-protected by our rules — this document is for understanding, not for sending.
 
-See also [firmware.md](firmware.md) for the image, [gatt.md](gatt.md) for the service list.
+See also [firmware.md](firmware.md) for the image format and extraction (the OTA payload is LZMA-compressed, not encrypted), [gatt.md](gatt.md) for the service list.
 
 ## Channels under 7033
 

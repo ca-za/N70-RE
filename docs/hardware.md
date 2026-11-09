@@ -13,9 +13,11 @@
 | Firmware | 3.0.13 (confirmed: the OTA server returns this as the current build for modelId 23877; the encrypted image is archived, see [firmware.md](firmware.md)); the Device Information service only reports `0.0.0.0` |
 | Model string | `WQ00` (ASCII in settings field 0x19) |
 
-## Chip: Wuqi WQ7033 (very likely)
+## Chip: Wuqi WQ703X (WQ7035AX / WQ7036) ✅
 
-Evidence: vendor-specific BLE service `7033`, model string `WQ00`, QuickyAndroid has a dedicated `WuqiGattClient`. The QCY app 4.0.7 confirms it: it classifies a device as Wuqi (`isWQDevice`) when `vendorId & 0xF0 == 0x40`. The N70's `0x5D45` has low nibble group `0x40`, and the app's OTA routing sends it down the Wuqi presenter (`WQPresenterNew`). The firmware filename `HT18-...-OTA.bin` and the Wuqi SDK's `7033`/`7034` OTA channels tie it to Wuqi. The exact die (WQ7033 vs. a variant) is still not proven – the encrypted firmware contains no readable chip string.
+Confirmed from the decompressed firmware ([firmware.md](firmware.md)): the build tag is `QCY_HT18-7035AX-B-ADK_1.3.6.27-LDAC-20251219` and the code prints `WQ7036`. So the N70's chip is a **WQ703X, specifically 7035AX (code references 7036)** — **not** the WQ7033 we had guessed (the `7033` is only the GATT service UUID / SDK family name, not the die). Same WuQi ADK family; the datasheet facts below (dual RISC-V, HiFi 5 DSP, NPU, hybrid ANC, BLE Audio) apply to the 703X series.
+
+Earlier supporting evidence: the QCY app classifies a device as Wuqi (`isWQDevice`) when `vendorId & 0xF0 == 0x40`; the N70's `0x5D45` matches, and OTA routes through the Wuqi presenter (`WQPresenterNew`). Model string `WQ00` is the voice-prompt pack, not the chip.
 
 According to the [Wuqi datasheet (overview)](https://www.wuqi-micro.com/Public/Uploads/uploadfile2/files/20230830/WQ7033EN.pdf) / [product page](https://www.wuqi-micro.com/en/product-center/smart-audio-chip/4):
 

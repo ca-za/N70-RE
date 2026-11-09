@@ -2,4 +2,5 @@ work/
 .DS_Store
 tools/*
 !tools/*.swift
+!tools/*.py
 !tools/Info.plist

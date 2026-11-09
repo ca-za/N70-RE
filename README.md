@@ -5,7 +5,7 @@ Knowledge collected while building a macOS integration that controls the earbuds
 
 ## Status in one sentence
 
-The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise control, EQ, game mode, prompt volume, live battery). The protocol is known and tested on this device. The official QCY app (4.0.7) has been decompiled: the full A001 command set and the OTA mechanism (Wuqi service 7033) are documented from its code, and the firmware image (HT18, 3.0.13) has been archived. What's still missing: the firmware is encrypted, so the chip's code and keys remain out of reach.
+The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise control, EQ, game mode, prompt volume, live battery). The protocol is known and tested on this device. The official QCY app (4.0.7) has been decompiled: the full A001 command set and the OTA mechanism are documented from its code. The firmware image (HT18, 3.0.13) has been downloaded and **fully unpacked** — it is LZMA-compressed, not encrypted — exposing the RISC-V code for all cores. The chip is a **Wuqi WQ703X (7035AX/7036)**. What's left is disassembling the RISC-V images.
 
 ## Contents
 
@@ -40,6 +40,7 @@ The embedded `Info.plist` makes macOS ask for the Bluetooth permission.
 | `gatt_dump.swift` | read services + characteristics + descriptors (originally written for a ZMK keyboard battery, adjust the filter) |
 | `device_info.swift` | read the Device Information Service (180A) |
 | `list_7033.swift` | list the characteristics of service 7033 (reads/writes nothing) |
+| `ota_unpack.py` | unpack a QCY/WuQi WQ703X OTA `.bin` (verify CRCs, LZMA-decompress the images); `python3 -I tools/ota_unpack.py <file.bin>` |
 
 A full controller (keeping the connection, sending commands, tracking state) follows the protocol in [docs/protocol.md](docs/protocol.md); see [docs/hardware.md](docs/hardware.md) for connection behavior.
 

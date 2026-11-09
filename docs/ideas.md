@@ -6,25 +6,15 @@
 2. **Firmware obtained**: HT18 3.0.13, encrypted → [firmware.md](firmware.md). Internal model HT18 confirmed.
 3. **N70 server control panel** fetched → [controlpanel.md](controlpanel.md): confirms which opcodes the N70 supports, ANC values, EQ presets. Resolved `0x19` (prompt language), `0x1F` (auto power-off), `0x04` (play state), and that `0x2A` (wind) is live.
 
-## Firmware decryption – researched, not feasible without more access
+## Firmware – SOLVED (2026-11-10): not encrypted, just LZMA-compressed
 
-The OTA `.bin` payload is encrypted (whole-file entropy 8.000, no ECB block repeats → stream/CBC, likely compressed then encrypted; Wuqi says the OTA package is compressed). Only the ~0x90-byte header is plaintext. The chip validates and decrypts it on device (OTA errors "encryption key mismatch", "uboot mismatch").
+The OTA `.bin` is **not encrypted**. The 8.0 entropy was LZMA compression. A public GitHub mirror of the WuQi SDK ([qqq5127/ZT210](https://github.com/qqq5127/ZT210), same ADK family) gave the device-side OTA source (`ota.h`, `ota.c`, `app_wqota.c`), which showed the exact package format and that the receive path does only magic + CRC-32 checks and LZMA decompression — no cipher, no key. We parsed our N70 image: both CRC-32s match and all six blocks decompress to the stated sizes. Format, layout and extractor are in [firmware.md](firmware.md) / [`tools/ota_unpack.py`](../tools/ota_unpack.py).
 
-What the research turned up (see [sources.md](sources.md)):
-- **No public key, tool or prior analysis** for WQ7033 firmware. The Wuqi SDK (with `app_wqota.c` and the PC packaging tool) is NDA-only, for device makers.
-- The **build artifact is a `.wpk`** file – a RAR-like container that holds plaintext config (`app_evt.xml`, `audmap_config.json`) and the image regions (e.g. `tws_core0`, uboot). Community blogs rename `.wpk` → `.rar` to peek inside. **But that is the build output, not our file** – our `*-OTA.bin` is the *exported, packed/encrypted* image, which is not a RAR and has no plaintext payload.
-- So the readable config only exists inside the original `.wpk`, which we don't have.
+Result: full decompressed firmware for all cores (core0/core1/DSP/tone), readable RISC-V. Chip identity corrected to **WQ703X (7035AX/7036)**.
 
-Realistic ways to get the firmware code, all high effort / out of current scope:
-- Obtain the Wuqi SDK + packaging tool under NDA (device makers only), or a leaked SDK.
-- Hardware attack on a **spare** unit: flash dump (external SPI/eMMC read), JTAG/SWD, or voltage/EMFI glitching to capture the decrypted image or the key from RAM. Risk of bricking; needs a sacrificial device and lab gear.
-- Capture the chip pulling plaintext during its own decrypt – not exposed over any interface we can reach.
-
-### Search sweep (2026-11-10)
-
-Searched CN blogs (CSDN/GitCode), GitHub, and RU forums (4PDA/RuTracker) for a key, decryptor, `.wpk` unpacker or firmware dump. **None exist publicly.** No WQ7033 presence on 4PDA/RuTracker at all (unlike CSR/Qualcomm QCC, which have active hacking threads). The Wuqi SDK, the OTA source `app_wqota.c`, the UI/packaging tool and the flasher `Wuqi.Beetle.Burn.exe` all exist but are **NDA-only**; the only public copies are unauthorised "free-share" leaks on CSDN/GitCode (unverified, Windows binaries). Details and links in [sources.md](sources.md).
-
-The **one static lever** that might reveal the cipher and where the key comes from: get the leaked SDK source + packaging tool and read them (read-only, isolated under `work/`, never executed). Open question it could answer: is the OTA key a fixed SDK/project default (then the image is decryptable offline) or per-device/in-chip (then it is not). **Caveats:** unauthorised proprietary code, unknown provenance (malware risk – treat as hostile, never run the `.exe`), legal grey area. Decide explicitly before pursuing.
+### Next (optional)
+- Disassemble the RISC-V images in Ghidra/radare2 at their known load addresses (core0 0x10000, core1 0xAB000, DSP 0x169000).
+- The search sweep for a key/decryptor turned out moot; it was never encrypted. (No WQ7033 presence on 4PDA/RuTracker; the readable SDK came from GitHub, not the NDA leaks.)
 
 **Conclusion:** the firmware code and keys stay out of reach. The valuable, reachable target – the control protocol – is already fully mapped.
 
