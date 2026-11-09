@@ -1,0 +1,5 @@
+work/
+.DS_Store
+tools/*
+!tools/*.swift
+!tools/Info.plist
