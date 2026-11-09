@@ -20,6 +20,12 @@ Realistic ways to get the firmware code, all high effort / out of current scope:
 - Hardware attack on a **spare** unit: flash dump (external SPI/eMMC read), JTAG/SWD, or voltage/EMFI glitching to capture the decrypted image or the key from RAM. Risk of bricking; needs a sacrificial device and lab gear.
 - Capture the chip pulling plaintext during its own decrypt – not exposed over any interface we can reach.
 
+### Search sweep (2026-11-10)
+
+Searched CN blogs (CSDN/GitCode), GitHub, and RU forums (4PDA/RuTracker) for a key, decryptor, `.wpk` unpacker or firmware dump. **None exist publicly.** No WQ7033 presence on 4PDA/RuTracker at all (unlike CSR/Qualcomm QCC, which have active hacking threads). The Wuqi SDK, the OTA source `app_wqota.c`, the UI/packaging tool and the flasher `Wuqi.Beetle.Burn.exe` all exist but are **NDA-only**; the only public copies are unauthorised "free-share" leaks on CSDN/GitCode (unverified, Windows binaries). Details and links in [sources.md](sources.md).
+
+The **one static lever** that might reveal the cipher and where the key comes from: get the leaked SDK source + packaging tool and read them (read-only, isolated under `work/`, never executed). Open question it could answer: is the OTA key a fixed SDK/project default (then the image is decryptable offline) or per-device/in-chip (then it is not). **Caveats:** unauthorised proprietary code, unknown provenance (malware risk – treat as hostile, never run the `.exe`), legal grey area. Decide explicitly before pursuing.
+
 **Conclusion:** the firmware code and keys stay out of reach. The valuable, reachable target – the control protocol – is already fully mapped.
 
 ## Still open, low risk

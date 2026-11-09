@@ -34,7 +34,11 @@
 
 - [WQ7033 OTA firmware update](https://blog.csdn.net/ccdehuiji/article/details/131578652) – OTA package is compressed, can roll back; built from a `.wpk` in the Wuqi UI tool by selecting image regions; OTA code in `app_wqota.c`; opcodes `OPCODE_OTA_GET_DEVICE_INFO / GET_FILE_INFO_OFFSET / INQUIRY_IF_CAN_UPDAT` (match our 0x02/0xE1/0xE2).
 - [WQ7033 SDK structure and boot flow](https://blog.csdn.net/ccdehuiji/article/details/131193478) – SDK dirs app/config/driver/os(FreeRTOS)/project; build output `.wpk` (community renames to `.rar` → contains `app_evt.xml`, `audmap_config.json`).
-- [WQ7033 app communication](https://blog.csdn.net/ccdehuiji/article/details/131472363), [dev guide](https://blog.csdn.net/dop102/article/details/122359296). No public firmware key or decryption method found; the SDK is NDA-only.
+- [WQ7033 app communication](https://blog.csdn.net/ccdehuiji/article/details/131472363), [dev guide](https://blog.csdn.net/dop102/article/details/122359296), [flashing + UI tool / .wpk](https://blog.csdn.net/ccdehuiji/article/details/131208244), [single-wire burn](https://blog.csdn.net/dop102/article/details/123751959).
+- Tools named in those blogs: the Wuqi **UI/packaging tool** (imports `.wpk`, exports the OTA `.bin` – the step that encrypts) and the production flasher **`Wuqi.Beetle.Burn.exe`** (single-wire UART, BOOT→VDD). SDK version seen: `sdk_tws_6.1.0.295` (scons build).
+- Unofficial mirrors exist of the burn/UI tool ([gitcode 5cec4](https://gitcode.com/open-source-toolkit/5cec4)) and of the "WQ7034-WQ7033 native SDK source" (CSDN "free share", 2025) – almost certainly **unauthorised redistribution of proprietary NDA software, unverified, Windows binaries**. Not downloaded.
+
+**Decryption research conclusion (2026-11-10):** No public firmware key, decryptor, `.wpk` unpacker, or firmware dump exists for WQ7033 on GitHub, CSDN, GitCode, 4PDA or RuTracker. The ecosystem (SDK, OTA source `app_wqota.c`, packaging/flash tools) is real but **NDA-only**; the only public copies are unauthorised leaks. The one static lever that could reveal the cipher/key would be the leaked SDK + packaging tool, read-only – see [ideas.md](ideas.md).
 
 ## Contradictions between the sources
 
