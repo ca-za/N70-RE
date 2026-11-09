@@ -45,4 +45,10 @@ The endpoint is unauthenticated in practice (any guest token works) and returns 
 ## What this does and doesn't give us
 
 - ✅ Confirmed: internal model HT18, current firmware 3.0.13, the download channel, modelId/vendorId 0x5D45.
-- ❌ Not possible from this file alone: reading the firmware code, the chip's exact identity from strings, or extracting keys. The app never decrypts it; the chip does.
+- ❌ Not possible from this file alone: reading the firmware code, the chip's exact identity from strings, or extracting keys. The app never decrypts it; the chip does. Research on WQ7033 firmware decryption and why it is out of reach: [ideas.md](ideas.md#firmware-decryption--researched-not-feasible-without-more-access).
+
+## Encryption analysis
+
+- Whole-file entropy 8.000 bits/byte; the payload from ~`0x90` to the end has no plaintext, no container magic (ZIP/RAR/gzip/xz all absent).
+- All 65 181 16-byte blocks are **unique** → not AES-ECB (no repeated-block leak); a stream cipher, CBC, or compressed-then-encrypted. Wuqi documents the OTA package as *compressed*, and the device reports "encryption key mismatch", so the image is compressed and encrypted, decrypted on-chip.
+- The Wuqi build output is a `.wpk` container (RAR-like, holds plaintext `app_evt.xml` / `audmap_config.json` + image regions). Our `*-OTA.bin` is the exported packed/encrypted image, **not** the `.wpk`, so it has no readable config.

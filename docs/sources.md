@@ -25,9 +25,16 @@
 ## Chip
 
 - [WQ7033 overview (PDF)](https://www.wuqi-micro.com/Public/Uploads/uploadfile2/files/20230830/WQ7033EN.pdf)
+- [WQ7033 datasheet, Chinese (PDF)](https://www.wuqi-micro.com/Public/Uploads/uploadfile/files/20230830/WQ7033.pdf)
 - [WQ7033 product page](https://www.wuqi-micro.com/en/product-center/smart-audio-chip/4)
 - [WQ7033AX (wuqi-tech)](http://en.wuqi-tech.com/product/12.html)
 - [Wuqi downloads](https://www.wuqi-micro.com/en/service-support/product-data-book/download2)
+
+### WQ7033 community notes (CSDN, Chinese; block automated fetch, read in a browser)
+
+- [WQ7033 OTA firmware update](https://blog.csdn.net/ccdehuiji/article/details/131578652) – OTA package is compressed, can roll back; built from a `.wpk` in the Wuqi UI tool by selecting image regions; OTA code in `app_wqota.c`; opcodes `OPCODE_OTA_GET_DEVICE_INFO / GET_FILE_INFO_OFFSET / INQUIRY_IF_CAN_UPDAT` (match our 0x02/0xE1/0xE2).
+- [WQ7033 SDK structure and boot flow](https://blog.csdn.net/ccdehuiji/article/details/131193478) – SDK dirs app/config/driver/os(FreeRTOS)/project; build output `.wpk` (community renames to `.rar` → contains `app_evt.xml`, `audmap_config.json`).
+- [WQ7033 app communication](https://blog.csdn.net/ccdehuiji/article/details/131472363), [dev guide](https://blog.csdn.net/dop102/article/details/122359296). No public firmware key or decryption method found; the SDK is NDA-only.
 
 ## Contradictions between the sources
 
