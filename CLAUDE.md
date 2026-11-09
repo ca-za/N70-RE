@@ -38,4 +38,5 @@ Note: `tools/gatt_dump.swift` is currently an Objective-C runtime class inspecto
 - Battery comes from BLE advertisements (`docs/advertising.md`, raw samples in `data/adverts.txt`); the EQ format is in `docs/eq.md`.
 - Firmware and OTA: `docs/firmware.md` (the encrypted .bin, how its URL is fetched via a QCY guest token) and `docs/ota.md` (the Wuqi service 7033 protocol). The N70's QCY-internal model is **HT18**, modelId/vendor ID `0x5D45` = 23877.
 - The official QCY app (`com.qcymall.googleearphonesetup`) decompiles to `work/qcy-app-4.0.7-jadx/` (jadx, gitignored). It has no N70-specific code; features come from a server-downloaded control-panel JSON. `docs/protocol.md` has the full opcode table from it (source only vs. ✅ device-verified).
+- The N70's own feature/command list is `data/controlpanel_n70.json` (`docs/controlpanel.md`), fetched from `api.watch.qcy.com/product/findControlPanels` (modelId 23877). Its `cmdid` fields are decimal A001 opcodes and confirm which commands the N70 supports.
 - Open questions and planned next steps live in `docs/ideas.md`.

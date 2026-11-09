@@ -110,10 +110,10 @@ Decompiled from the generic QCY A001 library (`com/qcymall/qcylibrary/dataBean/D
 | `16` | BALANCE | 1 byte 0..100 | read |
 | `17` | ANCSETTING | `[mode, scene, level]`; 1 ANC / 2 off / 3 transparency | r+w ✅ |
 | `18` | PAIRNAME | rename, UTF-8 bytes; read NUL-terminated | source |
-| `19` | VOICENAME | ASCII prompt-pack ID; **"WQ00" = voice-prompt package**, written after a voice-pack OTA | clarifies 0x19 |
+| `19` | VOICENAME | voice-prompt **language** switch: ASCII pack ID, `WQ00` = English, `WQ01` = Chinese (panel "Tone Switch", cmdid 25). Our blob's `WQ00` = English prompts | N70 panel |
 | `1D` | TONEVOLUME | read `[v,max]`, write `[v,0]` (2-byte form; 1-byte only for vendor 16737) | r+w ✅ |
 | `1E` | TAKEPHOTO | camera shutter | source |
-| `1F` | STANDBY | u16 LE value (UI from panel) | read |
+| `1F` | STANDBY / auto power-off | **auto power-off after disconnect**, u16 LE minutes; `0500`=5 `0A00`=10 `1E00`=30 `3C00`=60 `FFFF`=never (panel "Disconnect and power off", cmdid 31) | N70 panel |
 | `20` | MULTIEQ | 6 bytes/band (no type byte); used for WQ vendors 0x4D43/45/46/47 instead of 0x22 | source |
 | `22` | MULTIEQ2 | 7 bytes/band, see [eq.md](eq.md) | r+w ✅ |
 | `23` | LDAC | single value | read |
@@ -121,6 +121,7 @@ Decompiled from the generic QCY A001 library (`com/qcymall/qcylibrary/dataBean/D
 | `27` | AEQ | `27 01 01` runs adaptive-EQ | source |
 | `28` | ANC_RESULT | single (applied echo) | ✅ |
 | `29` | ANC_WEAR | 1–2 bytes | source |
+| `2A` | WIND_DETECT | wind-noise detection; `FF 03 2A 01 01` on / `FF 03 2A 01 00` off | N70 panel |
 | `2B` | KEYFUN | `[keyId, func]` pairs (notify of key map) | source |
 | `2C` | PEIDAI | wear: `[enable, musicIdx, ancIdx, (toneEnable)]`, write `FF 05 2C 03 en m a` | read ✅ |
 | `2D` | SPACE_AUDIO | spatial audio | source |
@@ -155,6 +156,8 @@ Decompiled from the generic QCY A001 library (`com/qcymall/qcylibrary/dataBean/D
 | `FE` | REQUESTDATA | query `FF 03 FE 01 <op>` | ✅ |
 
 Opcodes not in the table are parsed generically: `plen ≤ 2` → u16 LE value, otherwise a hex string. **No find-my-earbuds opcode exists** – the app's "find earbuds" just plays a sound from the phone. **No opcode enters OTA** – OTA goes over the Wuqi service 7033 / SPP, see [ota.md](ota.md).
+
+Which of these the N70 actually supports is listed in its server control panel ([controlpanel.md](controlpanel.md)): it confirms (via each item's decimal `cmdid`) the opcodes `09, 10, 11, 14, 16, 17, 18, 19, 1D, 1F, 22, 23, 24, 2A, 2C` and the two reset frames, plus the ANC parameter values. Rows marked "N70 panel" above come from there.
 
 ### Key remap (characteristic `000D`, not an FF frame)
 

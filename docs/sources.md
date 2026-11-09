@@ -19,6 +19,7 @@
 |---|---|---|
 | QCY app `com.qcymall.googleearphonesetup` 4.0.7 (720) | decompiled with jadx (`work/qcy-app-4.0.7-jadx/`, not in repo). Generic A001 library `com/qcymall/qcylibrary/`, Wuqi OTA SDK `org/wuqi/android/`, HTTP API `utils/HTTPApi.java`. Pulled from the test phone via ADB. | **yes** (generic, no N70-specific code) |
 | QCY OTA server `appcontent.qcy.com` | `user/touristMode` (guest token), `earphoneoOta/findEarphoneoOta` (firmware lookup by modelId). Confirmed N70 = modelId 23877, versionName HT18, FW 3.0.13. | **yes** |
+| QCY panel server `api.watch.qcy.com` | `product/findControlPanels` (modelId 23877, firmwareVersion) → the N70's own feature/command panel. Saved as `data/controlpanel_n70.json`, documented in [controlpanel.md](controlpanel.md). | **yes, model-specific** |
 | QCY CDN `img.qcymall.com` | firmware image `HT18-MP-V3.0.13-OTA.bin` (encrypted). See [firmware.md](firmware.md). | **yes** |
 
 ## Chip

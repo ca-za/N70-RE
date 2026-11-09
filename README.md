@@ -15,12 +15,13 @@ The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise c
 | [docs/gatt.md](docs/gatt.md) | BLE services and characteristics (A001, 7033, 180A, FE2C) |
 | [docs/protocol.md](docs/protocol.md) | QCY protocol: frame format, all known commands, **verified on the device** vs. source only |
 | [docs/advertising.md](docs/advertising.md) | BLE advertisements: battery L/R/case, addresses, when they are sent |
-| [docs/eq.md](docs/eq.md) | Parametric EQ: format, factory curve, tested writes |
+| [docs/eq.md](docs/eq.md) | Parametric EQ: format, factory curve, presets, tested writes |
+| [docs/controlpanel.md](docs/controlpanel.md) | The N70's own server feature list: which opcodes it supports, ANC values, key remap |
 | [docs/firmware.md](docs/firmware.md) | Firmware image: how to fetch the URL (guest token), the encrypted .bin, header |
 | [docs/ota.md](docs/ota.md) | OTA over Wuqi service 7033: framing, state machine, the read-only device-info query |
 | [docs/sources.md](docs/sources.md) | Sources, contradictions between sources |
 | [docs/ideas.md](docs/ideas.md) | Open questions, next steps, risks |
-| `data/` | Raw data: factory EQ, settings blobs, advertisements |
+| `data/` | Raw data: factory EQ, settings blobs, advertisements, N70 control-panel JSON |
 | `tools/` | Swift test programs (CoreBluetooth) |
 
 ## Building the tools
