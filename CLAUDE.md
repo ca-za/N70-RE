@@ -36,4 +36,6 @@ Note: `tools/gatt_dump.swift` is currently an Objective-C runtime class inspecto
 - Frame: `FF <len> <op> <plen> <params...>`, `len = plen + 2`, no checksum. Query a value with `FF 03 FE 01 <op>`. One reply frame can hold several `<op> <plen> <params>` blocks.
 - A plain **read** of `1002` returns all settings in one blob (examples in `data/settings_blobs.txt`).
 - Battery comes from BLE advertisements (`docs/advertising.md`, raw samples in `data/adverts.txt`); the EQ format is in `docs/eq.md`.
+- Firmware and OTA: `docs/firmware.md` (the encrypted .bin, how its URL is fetched via a QCY guest token) and `docs/ota.md` (the Wuqi service 7033 protocol). The N70's QCY-internal model is **HT18**, modelId/vendor ID `0x5D45` = 23877.
+- The official QCY app (`com.qcymall.googleearphonesetup`) decompiles to `work/qcy-app-4.0.7-jadx/` (jadx, gitignored). It has no N70-specific code; features come from a server-downloaded control-panel JSON. `docs/protocol.md` has the full opcode table from it (source only vs. ✅ device-verified).
 - Open questions and planned next steps live in `docs/ideas.md`.

@@ -13,6 +13,14 @@
 | [jean-vr/oqcy](https://github.com/jean-vr/oqcy) | Expo app, HT05 | – |
 | [mtahmid20/QCY-Arcbuds-Controller](https://github.com/mtahmid20/QCY-Arcbuds-Controller) | Arcbuds | – |
 
+## Official QCY app and server
+
+| Source | Contents | N70? |
+|---|---|---|
+| QCY app `com.qcymall.googleearphonesetup` 4.0.7 (720) | decompiled with jadx (`work/qcy-app-4.0.7-jadx/`, not in repo). Generic A001 library `com/qcymall/qcylibrary/`, Wuqi OTA SDK `org/wuqi/android/`, HTTP API `utils/HTTPApi.java`. Pulled from the test phone via ADB. | **yes** (generic, no N70-specific code) |
+| QCY OTA server `appcontent.qcy.com` | `user/touristMode` (guest token), `earphoneoOta/findEarphoneoOta` (firmware lookup by modelId). Confirmed N70 = modelId 23877, versionName HT18, FW 3.0.13. | **yes** |
+| QCY CDN `img.qcymall.com` | firmware image `HT18-MP-V3.0.13-OTA.bin` (encrypted). See [firmware.md](firmware.md). | **yes** |
+
 ## Chip
 
 - [WQ7033 overview (PDF)](https://www.wuqi-micro.com/Public/Uploads/uploadfile2/files/20230830/WQ7033EN.pdf)
@@ -24,6 +32,7 @@
 
 | Topic | Source A | Source B | Observed on the N70 |
 |---|---|---|---|
+| Internal model | README guesses "probably HT18" | OTA server `versionName` = HT18 | **HT18** ✅ confirmed |
 | ANC opcode | HT07: `0x0C` (1 byte, scene<<4\|level) | OpenQCY/qcyx: `0x17` (3 bytes) | `0x17` ✅ |
 | Prompt volume `0x1D` | OpenQCY: 1 byte | qcyx: 2 bytes `<lvl> 00` | **only 2 bytes work** ✅ |
 | `0x1D` reply byte 2 | qcyx: status | OpenQCY: maximum | constant `0F`, consistent with max 15 |
