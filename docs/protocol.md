@@ -159,6 +159,38 @@ Opcodes not in the table are parsed generically: `plen ≤ 2` → u16 LE value, 
 
 Which of these the N70 actually supports is listed in its server control panel ([controlpanel.md](controlpanel.md)): it confirms (via each item's decimal `cmdid`) the opcodes `09, 10, 11, 14, 16, 17, 18, 19, 1D, 1F, 22, 23, 24, 2A, 2C` and the two reset frames, plus the ANC parameter values. Rows marked "N70 panel" above come from there.
 
+## Live opcode sweep (device, 2026-11-10) ✅
+
+We swept the read-only query `FF 03 FE 01 <op>` over **every** opcode `0x00`–`0xFF` on the real N70 (read-only; nothing was set) and logged which ones reply. This empirically bounds the queryable command set and upgrades many "source only" rows to device-verified.
+
+**Result: the N70 replies only on `0x08`–`0x48`, and every responder is already in the table above — there are no hidden *queryable* opcodes.** (Write-only / event-only commands such as the resets `01/02/03`, `0x27` AEQ-trigger or `0x28` ANC_RESULT don't answer a query and so can't be found this way; but QCY's own app implements the whole protocol, so undocumented commands are unlikely.)
+
+Responders, with the N70's current value at sweep time (decoded):
+
+| Op | Reply | Meaning |
+|---|---|---|
+| `08` | `08 03 LL RR 7f` | volume L/R, **max = 0x7F (127)**, live-varying |
+| `09` | `09 01 02` | game mode off |
+| `10` | `10 01 00` | sleep mode off |
+| `14` | `14 04 ffff 0000` | shutdown timer off (set 0xFFFF, remaining 0) ✅ format confirmed |
+| `16` | `16 01 32` | balance 50 (center) ✅ |
+| `17` | `17 03 02 00 00` | ANC off (normal) |
+| `18` | `18 22 20 00…` | device name, 34-byte field (currently blank) ✅ |
+| `19` | `19 06 04 57 51 30 30` | prompt language pack "WQ00" = English ✅ |
+| `1D` | `1d 02 04 0f` | prompt volume 4 / 15 |
+| `1F` | `1f 02 05 00` | auto power-off 5 min ✅ |
+| `22` | `91`-byte PEQ | current parametric EQ (a **custom** curve, differs from the factory Spatial preset) |
+| `23` | `23 01 01` | LDAC on |
+| `24` | `24 01 01` | multipoint on |
+| `2A` | `2a 01 01` | **wind detection on** ✅ (was source only) |
+| `2B` | `2b 14 01 00 02 00 03 01 04 01 05 02 06 03 07 00 08 00 09 04 0a 0b` | **current key map**, 10 `[keyId,func]` pairs ✅ (long-press-R = func 0x0B = ANC mode) |
+| `2C` | `2c 03 01 01 00` | wear detection on, music-action 1, anc-action 0 ✅ |
+| `43` | `43 01 01` | "AI" feature on ✅ |
+| `46` / `47` | `91`-byte PEQ | per-side EQ **left / right** ✅ (same layout as 0x22) |
+| `48` | `48 01 01` | in-ear sensitivity 1 ✅ |
+
+**No reply** (so: absent on the N70, or write/event-only): among the documented ops, `04, 06, 0A, 0C, 11, 12, 1E, 20, 27, 28, 29, 2D, 2E, 2F, 30, 32, 34, 35–3F, 44, 45, 4A, 4D, 4F, 50–5B`, and everything `0x49`–`0xFF`. Notably `0x2D` (spatial audio), `0x44` (max-EQ-count), `0x54` (AI-ANC) and the speaker/LED/SD-music ops give nothing — consistent with the N70 not exposing those features ([controlpanel.md](controlpanel.md)).
+
 ### Key remap (characteristic `000D`, not an FF frame)
 
 Raw `[keyId, funcId]…` pairs. keyIds: music L/R single 1/2, double 3/4, triple 5/6, quad 7/8, long 9/10; call-mode = +20 (21–30). funcIds: 0 none, 1 play/pause, 2 prev, 3 next, 4 assistant, 5 vol+, 6 vol−, 7 game, 8 answer, 9 reject, 10 hold, 11 redial. The actual per-model set comes from the panel JSON.
