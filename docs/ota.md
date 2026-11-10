@@ -81,4 +81,4 @@ This is in principle a read-only way to get the firmware version over 7033. **Bu
 
 ## CLI channel (1001/1002) — avoid
 
-Wuqi factory command line. Defined in the SDK but **never called by the QCY app**. Message: `23 23 | moduleID(2) | crc16(2) | msgID(2) | ctrl | rsvd | len(2) | sn(2) | payload | 40 40` (little-endian; crc16 = high 16 bits of CRC-32(payload)). Contains read IDs (GET_FW_VER, GET_ROM_VER, GET_CHIP_INFO, GET_BATTERY_STATE, GET_BDADDR) but also FORCE_CRASH, SOFT_RST, SET_KV, MAC/SN setters. Treat as dangerous; do not probe.
+Wuqi factory command line. Defined in the SDK but **never called by the QCY app**. Framing and the full command catalog (67 commands, internal user events, the N70's AT-command parser) are in [factory_cli.md](factory_cli.md). It includes read-only queries but also arbitrary memory/flash writes, OEM-MAC overwrite, SOFT_RST, raw HCI and ENTER_DUT/FACTORY/OTA modes. Treat as dangerous; do not probe.
