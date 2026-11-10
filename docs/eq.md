@@ -2,6 +2,8 @@
 
 The N70 has **no preset characteristic `000B`** (the legacy EQ of other models), but a **parametric EQ with 20 filter slots** via the command channel.
 
+> **LDAC conflict (not ANC):** LDAC (`0x23`) is mutually exclusive with the **spatial / sound-effect EQ presets**, not with ANC. When LDAC is on and the user picks such a preset, the app pops a "Disable LDAC" dialog (`EQItemView`, for preset cmdIDs 10/18 that carry an `alarmMsg`). ANC (`0x17`) is independent — the app sets it without ever checking LDAC state. Toggling LDAC restarts the device (panel: "Turning on LDAC will restart the device"), which likely leaves ANC off until re-enabled.
+
 ## Format
 
 Read: `FF 03 FE 01 22` → reply `FF 91 22 8F <143 bytes>`
