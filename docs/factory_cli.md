@@ -117,6 +117,12 @@ Mostly read/set production data (color, serial id), sensors (touch CDC, in-ear, 
 
 (`AT+poweroff` → event 1001 = power off; verified. This is how the event-id reading was validated.)
 
+## Reachability over BLE — tested, does not respond (2026-11-10)
+
+We built the complete, source-verified sender (CLI frame + the GTP transport wrapper — preamble `D0 D2 C5 C2`, 8-byte header with CRC-8 HEC, CRC-32 FCS, type `0x03` = CLI) and sent a **read-only `GET_CHIP_INFO`** to 7033/`1001`. Diagnostics confirmed: connected to "QCY MeloBuds N70-APP", characteristics `1001`(write-no-rsp)/`1002`(notify)/`2001`/`2002` present, notify **active** on 1002 and 2002. The write goes out cleanly — and the device **never responds** (no data, no ack, on any characteristic), raw or GTP-wrapped.
+
+Conclusion: the factory CLI is **not serviced over BLE on the shipping firmware**. The `1001`/`1002` characteristics exist but no handler answers in normal operation — the CLI is a debug/factory feature reached through the production **UART / single-wire test-pad** path, not BLE. So reading RAM/ROM via `READ_DATA` over BLE is **not possible** without physical test-pad access (and likely a factory/DUT firmware mode). Nothing harmful was sent — only the read-only info query — and the device was unaffected. (Reassuring from a security view: the earbuds do not expose arbitrary-memory read to a BLE client.)
+
 ## Status
 
 All command IDs, framing and behaviours are **from code** (WuQi ADK). Confirmed present in the N70 firmware (filename strings): `app_cli.c` (all APPLICATION cmds), `cli_common_basic.c`, `cli_common_kv.c`, `cli_audio_spk.c`, and N70-only `cli_audio_anc.c` / `cli_audio.c` / the DC-cal handler + the AT parser. Inclusion of the memory/OEM/charger/LED/lowpower/FTM modules in this exact build is unconfirmed (assert strings may be stripped) — not proof of removal. The banner string `703XWuQiCli` / `wq-cli` confirms the CLI runs.
