@@ -106,8 +106,16 @@ Charger: disable pin GPIO mode=0 ⚠, set current=1 ⚠, get config=2. LED: `LED
 
 ## ASCII AT-command parser (N70-only)
 
-Separate from the binary CLI, the N70 app core has an `AT+…` text command surface (strings in the firmware):
-`AT+custom, AT+getcolor, AT+getid, AT+getinear=, AT+getlink, AT+gettouch, AT+gettwsinfo, AT+getvbat, AT+getver, AT+keytest, AT+NTC, AT+poweroff, AT+setcolor, AT+setid, AT+setinear=, AT+setMEMS, AT+stomode, AT+twsgetlocal, AT+twssetremote, AT+voldefault, AT+VOLMAX`. These read/set color, serial id, touch, battery, version, in-ear, MEMS, volume defaults, and `AT+poweroff`. Transport not confirmed (likely the same 7033/SPP channel or UART).
+Separate from the binary CLI, the N70 app core has an `AT+…` text command surface — a production / line-test interface. The parser uses a `{name, handler}` table (app core, around vaddr `0x34209800`); each handler replies over the same channel (common send routine at `0x341d10ba`, id `0xE0`). Transport not confirmed (likely the same 7033/SPP channel or UART). Full list:
+
+`AT+custom, AT+getcolor/AT+setcolor, AT+getid/AT+setid, AT+getinear=/AT+setinear=, AT+getlink, AT+gettouch, AT+gettwsinfo, AT+getvbat, AT+getver/AT+getVER, AT+keytest, AT+NTC, AT+poweroff, AT+setMEMS, AT+stomode, AT+twsgetlocal, AT+twssetremote, AT+voldefault, AT+VOLMAX`.
+
+Mostly read/set production data (color, serial id), sensors (touch CDC, in-ear, NTC temp, battery), version, TWS info, and volume defaults. Two decoded by disassembly:
+
+- **`AT+setMEMS <d>`** — MEMS **microphone test/select** (handler `0x3419dd0c`). Takes one ASCII digit: `0`/`1` disable/enable a mic path; `3`/`4`/`5`/`6` select one of four mic channels (internal indices 4/3/1/2); other = default/query. The N70 has **up to 4 MEMS mics** — confirmed by firmware strings `ffmic_into_queue` (feedforward ANC mic), `fbmic_into_queue(_aec)` (feedback ANC mic) and `n_mems <= 4`. A line-test command to exercise each microphone.
+- **`AT+stomode`** — enters a special power mode (handler `0x3419d710`): same shape as `AT+poweroff` but fires internal event **1054** instead of poweroff's **1001** (`EVTUSR_POWER_OFF`). 1054 is an N70-specific event. Given the name and the poweroff-like flow, this is most likely a **store / shipping mode** (retail-demo or transport low-power state); no literal "store"/"ship" string exists to pin the exact word, so the name is the main evidence.
+
+(`AT+poweroff` → event 1001 = power off; verified. This is how the event-id reading was validated.)
 
 ## Status
 
