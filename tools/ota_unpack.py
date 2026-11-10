@@ -24,9 +24,9 @@
 import sys, os, struct, zlib, lzma
 
 MAGIC = 0xABCD6543
-NAMES = {  # best-effort labels by index; purely cosmetic
-    0: "img0_boot", 1: "img1_core0", 2: "img2_core1",
-    3: "img3_dsp", 4: "img4_cfg", 5: "img5_tone",
+NAMES = {  # roles confirmed from headers + strings (see docs/firmware_internals.md)
+    0: "img0_bootmap", 1: "bt_core_riscv", 2: "dsp_hifi5_xtensa",
+    3: "app_core_riscv", 4: "img4_cfg", 5: "tone",
 }
 
 

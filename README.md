@@ -19,6 +19,7 @@ The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise c
 | [docs/controlpanel.md](docs/controlpanel.md) | The N70's own server feature list: which opcodes it supports, ANC values, key remap |
 | [docs/firmware.md](docs/firmware.md) | Firmware image: how to fetch the URL (guest token), the encrypted .bin, header |
 | [docs/ota.md](docs/ota.md) | OTA over Wuqi service 7033: framing, state machine, the read-only device-info query |
+| [docs/firmware_internals.md](docs/firmware_internals.md) | Decompressed firmware: core/memory map (RISC-V + Xtensa DSP), how to load in r2/Ghidra, LE Audio finding |
 | [docs/sources.md](docs/sources.md) | Sources, contradictions between sources |
 | [docs/ideas.md](docs/ideas.md) | Open questions, next steps, risks |
 | `data/` | Raw data: factory EQ, settings blobs, advertisements, N70 control-panel JSON |
