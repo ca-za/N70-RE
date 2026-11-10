@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Reverse engineering notes for the QCY MeloBuds N70 earbuds (chip very likely Wuqi WQ7033), controlled from macOS over BLE. This is a documentation repo with a few small Swift/CoreBluetooth probe tools; there is no app, no test suite, no linter.
+Reverse engineering notes for the QCY MeloBuds N70 earbuds (chip Wuqi WQ703X / 7035AX, confirmed from the firmware; `7033` is only the GATT service UUID / SDK family name), controlled from macOS over BLE. This is a documentation repo with a few small Swift/CoreBluetooth probe tools plus a Python firmware unpacker; there is no app, no test suite, no linter.
 
 ## Rules
 

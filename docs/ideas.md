@@ -3,7 +3,7 @@
 ## Done (2026-11-09/10)
 
 1. **QCY app decompiled** (jadx, `work/qcy-app-4.0.7-jadx/`): full opcode table → [protocol.md](protocol.md); OTA over service 7033 → [ota.md](ota.md); firmware is downloaded from a server, not in the APK → [firmware.md](firmware.md).
-2. **Firmware obtained**: HT18 3.0.13, encrypted → [firmware.md](firmware.md). Internal model HT18 confirmed.
+2. **Firmware obtained and unpacked**: HT18 3.0.13, LZMA-compressed (not encrypted) → [firmware.md](firmware.md). Internal model HT18 confirmed.
 3. **N70 server control panel** fetched → [controlpanel.md](controlpanel.md): confirms which opcodes the N70 supports, ANC values, EQ presets. Resolved `0x19` (prompt language), `0x1F` (auto power-off), `0x04` (play state), and that `0x2A` (wind) is live.
 
 ## Firmware – SOLVED (2026-11-10): not encrypted, just LZMA-compressed

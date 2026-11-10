@@ -11,20 +11,20 @@ The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise c
 
 | File | Contents |
 |---|---|
-| [docs/hardware.md](docs/hardware.md) | Device, chip (Wuqi WQ7033), addresses, Bluetooth profiles |
+| [docs/hardware.md](docs/hardware.md) | Device, chip (Wuqi WQ703X / 7035AX), addresses, Bluetooth profiles |
 | [docs/gatt.md](docs/gatt.md) | BLE services and characteristics (A001, 7033, 180A, FE2C) |
 | [docs/protocol.md](docs/protocol.md) | QCY protocol: frame format, all known commands, **verified on the device** vs. source only |
 | [docs/advertising.md](docs/advertising.md) | BLE advertisements: battery L/R/case, addresses, when they are sent |
 | [docs/eq.md](docs/eq.md) | Parametric EQ: format, factory curve, presets, tested writes |
 | [docs/controlpanel.md](docs/controlpanel.md) | The N70's own server feature list: which opcodes it supports, ANC values, key remap |
-| [docs/firmware.md](docs/firmware.md) | Firmware image: how to fetch the URL (guest token), the encrypted .bin, header |
+| [docs/firmware.md](docs/firmware.md) | Firmware image: how to fetch the URL (guest token), the .bin (LZMA-compressed, not encrypted), unpacking |
 | [docs/ota.md](docs/ota.md) | OTA over Wuqi service 7033: framing, state machine, the read-only device-info query |
 | [docs/firmware_internals.md](docs/firmware_internals.md) | Decompressed firmware: core/memory map (RISC-V + Xtensa DSP), how to load in r2/Ghidra, LE Audio & keyword-spotting findings |
 | [docs/factory_cli.md](docs/factory_cli.md) | Hidden factory CLI on service 7033: framing, 67 commands, internal events, AT parser (documentation only) |
 | [docs/sources.md](docs/sources.md) | Sources, contradictions between sources |
 | [docs/ideas.md](docs/ideas.md) | Open questions, next steps, risks |
 | `data/` | Raw data: factory EQ, settings blobs, advertisements, N70 control-panel JSON |
-| `tools/` | Swift test programs (CoreBluetooth) |
+| `tools/` | Swift test programs (CoreBluetooth) + `ota_unpack.py` (firmware unpacker) |
 
 ## Building the tools
 

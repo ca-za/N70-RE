@@ -10,7 +10,7 @@
 | Classic BT address | `C4:33:96:02:76:C0` |
 | Name (classic) | `QCY MeloBuds N70` |
 | Name (BLE, control channel) | `QCY MeloBuds N70-APP` |
-| Firmware | 3.0.13 (confirmed: the OTA server returns this as the current build for modelId 23877; the encrypted image is archived, see [firmware.md](firmware.md)); the Device Information service only reports `0.0.0.0` |
+| Firmware | 3.0.13 (confirmed: the OTA server returns this as the current build for modelId 23877; the image is archived and **unpacked** — LZMA-compressed, not encrypted, see [firmware.md](firmware.md)); the Device Information service only reports `0.0.0.0` |
 | Model string | `WQ00` (ASCII in settings field 0x19) |
 
 ## Chip: Wuqi WQ703X (WQ7035AX / WQ7036) ✅
