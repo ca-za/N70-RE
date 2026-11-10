@@ -191,6 +191,10 @@ Responders, with the N70's current value at sweep time (decoded):
 
 **No reply** (so: absent on the N70, or write/event-only): among the documented ops, `04, 06, 0A, 0C, 11, 12, 1E, 20, 27, 28, 29, 2D, 2E, 2F, 30, 32, 34, 35–3F, 44, 45, 4A, 4D, 4F, 50–5B`, and everything `0x49`–`0xFF`. Notably `0x2D` (spatial audio), `0x44` (max-EQ-count), `0x54` (AI-ANC) and the speaker/LED/SD-music ops give nothing — consistent with the N70 not exposing those features ([controlpanel.md](controlpanel.md)).
 
+### Write-only opcodes: no hidden ones (firmware dispatch examined)
+
+The query sweep can't see write-only / event-only commands (resets `01/02/03`, `0x27` AEQ-trigger, etc.). We examined the app core's firmware dispatch to check for any beyond the documented set. The firmware's clean handler table (`0x34208d34`, 26 entries) turned out to be the **CLI/AT** dispatch (it uses the CLI responder), not A001; the A001 (QCY `FF`-frame) dispatch is a **sparse switch**, not a compact table, so it does not enumerate cleanly by static RE. Two independent bounds settle the question anyway: (1) the live query sweep found every readable opcode already documented, and (2) QCY's own app (`DataBean`) is the authoritative, complete opcode enum — QCY built the app and the firmware to one protocol, so a command the firmware handles but the app never names is very unlikely. **Conclusion: no evidence of hidden A001 opcodes; the documented set is authoritative, confirmed from both QCY's source and the device.**
+
 ### Key remap (characteristic `000D`, not an FF frame)
 
 Raw `[keyId, funcId]…` pairs. keyIds: music L/R single 1/2, double 3/4, triple 5/6, quad 7/8, long 9/10; call-mode = +20 (21–30). funcIds: 0 none, 1 play/pause, 2 prev, 3 next, 4 assistant, 5 vol+, 6 vol−, 7 game, 8 answer, 9 reject, 10 hold, 11 redial. The actual per-model set comes from the panel JSON.
