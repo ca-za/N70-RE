@@ -5,7 +5,7 @@ Knowledge collected while building a macOS integration that controls the earbuds
 
 ## Status in one sentence
 
-The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise control, EQ, game mode, prompt volume, live battery). The protocol is known and tested on this device. The official QCY app (4.0.7) has been decompiled: the full A001 command set and the OTA mechanism are documented from its code. The firmware image (HT18, 3.0.13) has been downloaded and **fully unpacked** — it is LZMA-compressed, not encrypted — exposing the RISC-V code for all cores. The chip is a **Wuqi WQ703X (7035AX/7036)**. What's left is disassembling the RISC-V images.
+The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise control, EQ, game mode, prompt volume, live battery). The protocol is known and tested on this device. The official QCY app (4.0.7) has been decompiled: the full A001 command set and the OTA mechanism are documented from its code. The firmware image (HT18, 3.0.13) has been downloaded and **fully unpacked** — it is LZMA-compressed, not encrypted — exposing the RISC-V code for all cores (chip **Wuqi WQ703X / 7035AX**), and analysed: core/memory map, LE Audio (compiled-but-absent), no on-device keyword spotting, the hidden factory CLI (present but not serviced over BLE), and a device-verified opcode sweep. The control protocol over Bluetooth is essentially fully mapped; a real macOS controller app has not been built yet.
 
 ## Contents
 
