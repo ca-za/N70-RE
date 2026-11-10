@@ -36,6 +36,16 @@ Result: full decompressed firmware for all cores (core0/core1/DSP/tone), readabl
 - Write to service 7033 (OTA/CLI) – the CLI channel has FORCE_CRASH / SOFT_RST / SET_KV.
 - Flash anything until the image format and a recovery path are understood.
 
+## Custom firmware feasibility / the ADK (2026-11-10)
+
+The N70 is built with WuQi's **`wq-adk` version 1.3.6.27** (from the firmware build tag; `components/` layout + `wqcore`, a newer generation than the public `sdk_tws_6.1.0.295` / ZT210 tree). Searched for the matching/compatible ADK across GitHub, Bing, Baidu and Gitee:
+
+- **Not publicly available.** The full `wq-adk` / `wq-audio` package is vendor-delivered under NDA (stated outright by multiple sources). Baidu and Gitee search are login/bot-walled; Bing surfaces no leak, and the exact package names (`wq-audio_1.4.0.69`, `wq-adk_1.3.6`) return zero results.
+- The **toolchain is gated too**: Cadence Xtensa (xt-clang, RI-2020.4) needs a license from WuQi's download server, plus `xtensa-wuqi-elf-gcc 12.2`, RISC-V GCC 14.2, and NeuroWeave/XNNC for the NPU.
+- Public **reference material** that assumes you already have the ADK (useful if it were ever obtained): [qqq5127/ZT210](https://github.com/qqq5127/ZT210) (older-gen full source, structural reference), [haikow/silero-vad-test](https://github.com/haikow/silero-vad-test) (build flow + toolchain list + patches against `wq-adk 1.4.0.69` for a 7036), [TommyLITommy/WUQI_SDK_Learning_And_Recording](https://github.com/TommyLITommy/WUQI_SDK_Learning_And_Recording) (deep wq-adk internals notes incl. the POGO-pin single-line flashing flow), and a CSDN article on the older `wq_sdk_env` Windows build env.
+
+Bottom line: building N70-compatible firmware is gated on three things we don't have and can't get without being a WuQi customer — the NDA ADK package, the licensed toolchain, and the N70 board config — plus physical test-pad flashing. See the feasibility discussion under "High risk / big effort" above.
+
 ## Related
 
 - LDAC from a Mac: macOS only does SBC/AAC; a custom A2DP/AVDTP over IOBluetooth L2CAP might work (unverified).
