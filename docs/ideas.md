@@ -39,4 +39,4 @@ Result: full decompressed firmware for all cores (core0/core1/DSP/tone), readabl
 ## Related
 
 - LDAC from a Mac: macOS only does SBC/AAC; a custom A2DP/AVDTP over IOBluetooth L2CAP might work (unverified).
-- LE Audio: the Mac supports it (`LEA`), the N70 offers no LE Audio services.
+- LE Audio: the Mac supports it (`LEA`), but the N70 **cannot** – the firmware has no LC3 codec, no isochronous (CIS) path and no LE Audio GATT profiles; it is classic-BT-only (A2DP/AVRCP/HFP). See [firmware_internals.md](firmware_internals.md). Confirmed from the decompressed firmware, not just the GATT scan.

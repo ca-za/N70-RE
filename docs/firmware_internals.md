@@ -40,7 +40,12 @@ Ghidra: import raw, language `RISCV:LE:32:RV32IC` (or `RV32GC`), base address as
 
 ## Findings so far
 
-- **LE Audio is compiled in but not enabled for this product.** The BT core contains `bt_dp_le_audio.c`, yet the device exposes no LE Audio GATT services ([gatt.md](gatt.md)). So the stack supports it; the N70 firmware just doesn't turn it on.
+- **LE Audio is not usable on the N70 and cannot be enabled by flipping a flag.** The BT core has two orphan host-layer file strings (`bt_dp_le_audio.c`, `aud_sv_lea.c`), but the parts that make LE Audio *work* are absent:
+  - **No LC3 codec** anywhere in the firmware (0 string hits across all images) — LC3 is mandatory for LE Audio.
+  - **No isochronous (CIS/CIG/BIS/ISOAL) data path** — no such strings.
+  - **No LE Audio GATT profiles** (ASCS / PACS / BAP / BASS) compiled in.
+  - Classic Bluetooth audio is fully present instead: A2DP, AVRCP, HFP (`T_a2dp_*`, `T_avrcp_*`, `T_hfp_*`).
+  So the N70 is classic-BT-only, matching the GATT scan ([gatt.md](gatt.md)) and `system_profiler`. Enabling LE Audio would need a different firmware built with the Wuqi ADK (NDA toolchain) that includes LC3 + ISO + the LE Audio services — not something a config flag or binary patch can add. The ZT210 SDK snapshot we have contains no LE Audio source at all.
 - **Codecs present:** LDAC (decoder), AAC, SBC, CVSD / mSBC (calls). No aptX.
 - **The A001 command handler** is `qcy_app.c` + `app_user_cmd.c` / `app_user_event.c` on the application core (img3). Log strings name real handlers: `qcy_to_wuqi_language_set`, `handle_update_bt_name`, `notify_lang_name`, `notify_local_name`, `notify_fix_test_result`, `handle_get_bredr_linkkey`, `set_default_name`.
 - **Build identity:** `QCY_HT18-7035AX-B-ADK_1.3.6.27-LDAC-20251219`, `FW-VERSION-v0.3.0.13`, project path `/root/projects/HT18/wq-adk/`.
@@ -48,5 +53,5 @@ Ghidra: import raw, language `RISCV:LE:32:RV32IC` (or `RV32GC`), base address as
 ## Open / next
 
 - Disassemble `qcy_app` on the app core and map the full A001 opcode dispatch, to cross-check [protocol.md](protocol.md) against the firmware.
-- Assess whether LE Audio could be enabled (likely needs a firmware rebuild with the Wuqi ADK – not reachable without the SDK toolchain).
+- LE Audio enablement: **answered – not feasible** (no LC3 codec, no ISO path, no LE Audio GATT profiles in the firmware; see above).
 - DSP image: Xtensa HiFi5, would need the right Xtensa config for clean disassembly.
