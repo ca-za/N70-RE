@@ -23,7 +23,7 @@ Each panel item carries a `cmdid` = the **decimal A001 opcode**. This cross-conf
 | Find headset | — | plays a sound; no earbud opcode |
 | Tone Switch (voice-prompt language) | 25 → `0x19` | English pack `WQ00` / Chinese `WQ01` (written as ASCII "57513030" / "57513031") |
 | Rename device | → `0x18` | |
-| Timing power-off | 20 → `0x14` | countdown shutdown |
+| Timing power-off | 20 → `0x14` | countdown shutdown. ⚠ writing 0 minutes powers off immediately (device-tested) |
 | Fit detection | 17 → `0x11` | ear-tip seal test |
 | Wear detection | 44 → `0x2C` | + sensitivity Medium/Normal/High |
 | Beep volume | 29 → `0x1D` | levels exposed: 4 / 6 / 8 / 10 (of 15) |

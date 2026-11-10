@@ -78,7 +78,7 @@ See [eq.md](eq.md).
 
 ## Other known opcodes (untested)
 
-From the sources, validated as **read** on the N70 according to OpenQCY: wear detection `2C`, game mode `09`, sleep `10`, LDAC `23`, multipoint `24`, wind detection `2A`, prompt volume `1D`, auto power-off `14`.
+From the sources, validated as **read** on the N70 according to OpenQCY: wear detection `2C`, game mode `09`, sleep `10`, LDAC `23`, multipoint `24`, wind detection `2A`, prompt volume `1D`, shutdown timer `14`.
 Touch mapping via characteristic `000D` (not found/searched on this device).
 
 Naming conflicts between the sources: `1D` (prompt/tone/notification volume, 1 vs. 2 bytes), `1F` (standby 1 byte vs. auto power-off u16), `2C` (byte names). See sources.md.
@@ -106,7 +106,7 @@ Decompiled from the generic QCY A001 library (`com/qcymall/qcylibrary/dataBean/D
 | `10` | SLEEPMODE | 1 on / 2 off (read `b0==1`) | source |
 | `11` | COMPACTNESS | ear-tip fit test; write `FF 05 11 03 x x x`, result `[status(0 ready/2 result), L, R]` | source |
 | `12` | LEDMODE | 1/2 | source |
-| `14` | POWERMANAGER | shutdown timer; write `14 04 <u16 LE min> 00 00`, read `[set u16, remaining u16]`, 0 = cancel | ⚠ source |
+| `14` | POWERMANAGER | shutdown timer; write `FF 06 14 04 <u16 LE min> 00 00`, read `[set u16, remaining u16]`. **⚠ `0` minutes = power off NOW** (not "cancel" as the app code suggests) – tested on the N70, the buds switched off ~2 s later. Setting 90 min ✅ (`14 04 5a00 5a00` read back). "Off" reads as set `0xFFFF`; cancelling with `0xFFFF` is untested | ⚠ partly ✅ |
 | `16` | BALANCE | 1 byte 0..100 | read |
 | `17` | ANCSETTING | `[mode, scene, level]`; 1 ANC / 2 off / 3 transparency | r+w ✅ |
 | `18` | PAIRNAME | rename, UTF-8 bytes; read NUL-terminated | source |
@@ -172,7 +172,7 @@ Responders, with the N70's current value at sweep time (decoded):
 | `08` | `08 03 LL RR 7f` | volume L/R, **max = 0x7F (127)**, live-varying |
 | `09` | `09 01 02` | game mode off |
 | `10` | `10 01 00` | sleep mode off |
-| `14` | `14 04 ffff 0000` | shutdown timer off (set 0xFFFF, remaining 0) ✅ format confirmed |
+| `14` | `14 04 ffff 0000` | shutdown timer off (set 0xFFFF, remaining 0) ✅ format confirmed. Writing 0 powers the buds off immediately ✅ (2026-11-10) |
 | `16` | `16 01 32` | balance 50 (center) ✅ |
 | `17` | `17 03 02 00 00` | ANC off (normal) |
 | `18` | `18 22 20 00…` | device name, 34-byte field (currently blank) ✅ |
