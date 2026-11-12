@@ -47,3 +47,22 @@ Audio codecs with macOS: SBC, AAC (A2DP); CVSD/mSBC (HFP). macOS can't do LDAC.
 - BLE advertisements (with battery) only now and then, mainly when opening the case / taking buds out (see advertising.md).
 - A BLE control connection can only be established while they advertise. After that it stays up (also when the controlling app restarts, since CoreBluetooth keeps the connection system-wide).
 - The first connection attempts were dropped by the device after ~1 s (probably because the buds were in the case at that moment); stable later.
+
+## Charging case
+
+The case has **no radio** (no Bluetooth of its own). It talks to the earbuds over the **charging contacts (pogo pins)** using a bit-banged single-wire protocol **modulated onto the charge line**: the case switches the charging voltage on/off in timed pulses, and a bud decodes the bitstream by sampling its charge-detect flag on a timer (8-bit opcodes). Source: the WuQi ADK `vendor/charger_box/charger_box_wq.c` (`battery_charger_get_flag()` polled in a timer, `cur_bit_count`, `sm_param(...,8)`).
+
+**The case has its own controller/MCU** (the "smart" `charger_box_wq` variant — the N70 uses it, since it reports case battery and lid events, which the dumb `charger_box_none` variant cannot). Over the charge line it sends (`charger_box.h` events / `BOX_MSG_OPT_CODE_*`):
+
+| Case action | Opcode / event |
+|---|---|
+| Lid open / close | `0x50` / `0x51` (`BOX_OPEN`/`BOX_CLOSE`) |
+| Case button long-press | `0x52`=3 s, `0x53`=10 s, `0x59`=20 s |
+| Enter pairing | `0x57` (`ENTER_PAIR`) |
+| Enter DUT / OTA mode | `0x55` / `0x56` |
+| Shutdown / reset / reconfig | `0x58` / reset / `0x54` |
+| Case battery | `CHARGER_EVT_BOX_BATTERY` → `{battery:7, charging:1}` |
+
+So the case button and lid are what trigger pairing, reset and the connect/popup behaviour, and the case reports its own battery this way (the earbuds then forward it in the BLE advertisement and over Google Fast Pair — `gfps_get_box_battery`).
+
+**Case firmware:** the case MCU runs its **own firmware on a separate chip** — **not** part of the earbud OTA image we unpacked (that is only the three earbud cores). We do not have the case firmware. Per third-party notes the case is flashable over its pogo pins too ("POGO-pin single-line upgrade"), presumably at the factory.
