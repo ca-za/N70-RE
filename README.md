@@ -13,6 +13,7 @@ The earbuds can be fully remote-controlled from a Mac over Bluetooth LE (noise c
 |---|---|
 | [docs/dev_platform.md](docs/dev_platform.md) | **Overview:** the WuQi ADK (SDK, toolchain, packaging, flashing) and the earbud architecture (chip, three cores + DSP, debug/UART, case) |
 | [docs/custom_firmware.md](docs/custom_firmware.md) | **Custom-FW effort:** no secure boot / no signing (image = guard + CRC-32), the two flashing routes, phased roadmap |
+| [docs/melobuds_pro.md](docs/melobuds_pro.md) | Sibling device **MeloBuds Pro (HT08)**: same WuQi WQ703 platform + A001/7033 protocol, modelId `0x4D4A`, no server firmware |
 | [docs/hardware.md](docs/hardware.md) | Device, chip (Wuqi WQ703X / 7035AX), addresses, Bluetooth profiles, debug/UART, charging case |
 | [docs/gatt.md](docs/gatt.md) | BLE services and characteristics (A001, 7033, 180A, FE2C) |
 | [docs/protocol.md](docs/protocol.md) | QCY protocol: frame format, all known commands, **verified on the device** vs. source only |

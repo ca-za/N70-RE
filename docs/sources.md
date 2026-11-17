@@ -6,7 +6,7 @@
 |---|---|---|
 | [GiorgioRafael/OpenQCY-Desktop](https://github.com/GiorgioRafael/OpenQCY-Desktop) | Windows controller; `docs/protocol-research.md`, `Protocol/QcyCommands.cs`, `QcyPacket.cs`, `QcyUuids.cs`, `QcyAdvertisement.cs`, `Device/QcyDeviceClient.cs` | **yes**, validated on hardware (FW L/R 3.0.13) |
 | [hui1601/QuickyAndroid](https://github.com/hui1601/QuickyAndroid) | Android app, 40+ commands; `ble/Protocol.kt`, `ble/QcyGattClient.kt`, `WuqiGattClient`, `JlGattClient`, `ZrGattClient` | HT18 according to its README |
-| [BrunoAssis/qcyx](https://github.com/BrunoAssis/qcyx) | desktop app; `docs/protocol/` (anc.md, eq.md, device-settings.md, packet-reference.md, ble-device.md) | MeloBuds Pro (HT08), N70 "planned" |
+| [BrunoAssis/qcyx](https://github.com/BrunoAssis/qcyx) | desktop app; `docs/protocol/` (anc.md, eq.md, device-settings.md, packet-reference.md, ble-device.md) | MeloBuds Pro (HT08), N70 "planned" — our own HT08 notes: [melobuds_pro.md](melobuds_pro.md) |
 | [Tekkiech/qcy-ht07-protocol](https://github.com/Tekkiech/qcy-ht07-protocol) | protocol report HT07 (Arcbuds), command table | HT07 |
 | [Tekkiech/ht07menu](https://github.com/Tekkiech/ht07menu) | macOS menu bar app for HT07 | HT07 |
 | [Matheus-TestUser1/OpenQCY](https://github.com/Matheus-TestUser1/OpenQCY) | Flutter app (MeloBuds Pro) | – |
