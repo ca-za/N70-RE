@@ -51,11 +51,13 @@ The N70 image: `pack_types=0x3F` → 6 images.
 | # | start addr | compressed | raw | content (from strings) |
 |---|---|---|---|---|
 | 0 | `0x00000002` | 144 | 304 | boot/descriptor (low entropy) |
-| 1 | `0x00010000` | 269 860 | 502 724 | **core0** firmware (RISC-V, QCY app `qcy_app.c`, BT host) |
-| 2 | `0x000AB000` | 384 260 | 614 432 | **core1** firmware |
-| 3 | `0x00169000` | 386 144 | 702 128 | **DSP** firmware (wq aec/drc/eq/ldac/sbc/asrc libs) |
+| 1 | `0x00010000` | 269 860 | 502 724 | **BT core** (RISC-V, run `0xB4010020`: controller + host, A2DP/AVRCP/HFP) |
+| 2 | `0x000AB000` | 384 260 | 614 432 | **DSP** (Xtensa HiFi 5, run `0x26008000`: wq aec/drc/eq/ldac/sbc/asrc libs) |
+| 3 | `0x00169000` | 386 144 | 702 128 | **app core** (RISC-V, run `0x34169020`: QCY app `qcy_app.c`, A001 logic) |
 | 4 | `0x003EE000` | 880 | 7 180 | config |
 | 5 | `0x003F0000` | 1 481 | 3 768 | tone / prompts |
+
+(Image roles are by run address + architecture, see [firmware_internals.md](firmware_internals.md); img2 is the Xtensa DSP, img3 the application RISC-V core.)
 
 CRC-32 is standard zlib. Magic, struct and the no-encryption/compression design come from the device-side OTA code in the public SDK (`ota.h`, `ota.c`, `app_wqota.c`). Note: the app's status strings "encryption key mismatch" / "uboot mismatch" are generic OTA result labels, not evidence that this image is encrypted.
 

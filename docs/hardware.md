@@ -66,3 +66,15 @@ The case has **no radio** (no Bluetooth of its own). It talks to the earbuds ove
 So the case button and lid are what trigger pairing, reset and the connect/popup behaviour, and the case reports its own battery this way (the earbuds then forward it in the BLE advertisement and over Google Fast Pair — `gfps_get_box_battery`).
 
 **Case firmware:** the case MCU runs its **own firmware on a separate chip** — **not** part of the earbud OTA image we unpacked (that is only the three earbud cores). We do not have the case firmware. Per third-party notes the case is flashable over its pogo pins too ("POGO-pin single-line upgrade"), presumably at the factory.
+
+**Case USB-C = charging only (likely).** The case USB-C port feeds VBUS into the case charger IC; the charger-box source references `vbus` but no USB data interface. Consumer-TWS cases usually leave the USB data lines unconnected or use them only for charger negotiation. So pulling **earbud** debug logs through the case USB is unlikely — there is no USB on the audio chip either (see "Debug & logging" below), and the case MCU's firmware/hardware we don't have. A non-invasive check: plug the case into a computer and see whether any USB/serial device enumerates; if nothing appears, the port is power-only.
+
+## Debug & logging interface (UART, not USB) ✅
+
+The earbud's own diagnostics come out over **UART**, confirmed from the decompressed firmware and the ADK:
+
+- Log + core-dump strings: `"[auto]Core dump has written to uart."`, `pl_uart1.c`, `wq_uart.c`; SDK symbols `DBGLOG_DUMP_UART`, `GENERIC_TRANSMISSION_IO_UART`. The `COM6`–`COM9` strings are the Windows host side of that UART.
+- **No USB** on the WQ703X: the ADK has no USB driver (no `usb`/`usb_cdc`/`usb_device` files or strings), so the chip almost certainly has no USB device mode.
+- The factory CLI (67 commands) rides the same UART via the GTP transport; it is also wired to GATT service 7033 but **not serviced over BLE** in shipping firmware (see [factory_cli.md](factory_cli.md)).
+
+So the realistic route to live `dbglog` / core dumps is the earbud's **UART test pads** — the same single-wire/UART interface used for factory flashing (`Wuqi.Beetle.Burn.exe`, see [dev_platform.md](dev_platform.md)), which needs physical access to the bud's PCB.

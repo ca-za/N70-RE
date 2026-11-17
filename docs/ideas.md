@@ -46,6 +46,8 @@ The N70 is built with WuQi's **`wq-adk` version 1.3.6.27** (from the firmware bu
 
 Bottom line: building N70-compatible firmware is gated on three things we don't have and can't get without being a WuQi customer — the NDA ADK package, the licensed toolchain, and the N70 board config — plus physical test-pad flashing. See the feasibility discussion under "High risk / big effort" above.
 
+The full development-platform + earbud-architecture picture is consolidated in [dev_platform.md](dev_platform.md) (SDK, toolchain, build/package/flash pipeline, the three cores + DSP, debug/UART, case).
+
 ## Related
 
 - LDAC from a Mac: macOS only does SBC/AAC; a custom A2DP/AVDTP over IOBluetooth L2CAP might work (unverified).
