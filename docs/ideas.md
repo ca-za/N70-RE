@@ -48,6 +48,8 @@ Bottom line: building N70-compatible firmware is gated on three things we don't 
 
 The full development-platform + earbud-architecture picture is consolidated in [dev_platform.md](dev_platform.md) (SDK, toolchain, build/package/flash pipeline, the three cores + DSP, debug/UART, case).
 
+**Custom firmware is being actively pursued** ([custom_firmware.md](custom_firmware.md)): the N70 has **no secure boot and no image signing** (boot checks only the guard magic `0xA4E49A17`; OTA checks only magic + CRC-32; shipping images are unsigned, `tlv_count=0`). So a repacked, modified image with valid CRC-32s will boot — custom firmware is feasible at the binary level, flashable over OTA (service 7033) or single-wire UART, with a UART read-back as the recovery net.
+
 ## Related
 
 - LDAC from a Mac: macOS only does SBC/AAC; a custom A2DP/AVDTP over IOBluetooth L2CAP might work (unverified).
