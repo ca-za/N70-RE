@@ -61,7 +61,53 @@ The app does **not** parse the firmware file. The device pulls byte ranges by ab
 5. `0xE6` finish; for TWS either `0xE8` sync (dual) or `0xE7` change-device then repeat for the other bud.
 6. `0x03` reboot to commit.
 
-## Read-only device-info query `0x02`
+## Device-side implementation (`app_wqota.c`)
+
+Everything below is **source only**, read from the device-side WuQi ADK at `work/zt210-sdk/core0/src/app/tws/user_app/app_wqota.c` (guarded by `#if WQOTA_ENABLED`). It confirms and sharpens the app-derived table above; line numbers are that file.
+
+**Channel / UUIDs** (lines 66–82): service `0x7033`, BLE write char **RX `0x2001`**, BLE notify char **TX `0x2002`**; the same roles run over classic-BT SPP channel `0x7034`. An `ota_ch_t` enum (`OTA_CH_SPP`/`OTA_CH_BLE`) tracks which transport is active.
+
+**Envelope** (lines 117–123, 171–180): the frame is a packed `packet_t`:
+```
+prefix:24  source:3  unused:3  need_rsp:1  is_cmd:1  opcode:8  len_be:16  data[]
+```
+- `prefix` = `PACKET_PREFIX_VALUE 0x6E0770` → the bytes `70 07 6E` on the wire; a 1-byte `PACKET_SUFFIX_VALUE 0x33` closes every frame.
+- The byte after the prefix carries `is_cmd` (bit 7) + `need_rsp` (bit 6) + a 3-bit `source` (bits 0–2). So a request's `C0` = is_cmd + need_rsp, source 0; a response's `00` = neither. This is exactly the `C0`/`00` split noted above.
+- `len_be` is the big-endian length of `data[]` (= `SN` + params). `PKT_LEN = sizeof(packet_t)=6 + len + 1(suffix)`. The parser rejects a frame whose prefix (line 1038) or suffix (line 1076) is wrong.
+
+**Opcodes** (`opcode_t`, lines 140–154) match the table above, and add `OPCODE_OTA_CUSTOM = 0xF0` (vendor hook). The dispatch is a plain `switch` (lines 960–987).
+
+**`status` byte** (`status_code_t`, lines 125–138) — the response's first field, distinct from each opcode's own `result` byte: `0` SUCCESS, `1` FAIL, `2` UNKNOWN_CMD, `3` BUSY, `4` NO_RESPONSE, `5` CRC_ERROR, `6` ALL_DATA_CRC_ERROR, `7` PARAM_ERROR, `8` RESPONSE_DATA_OVER_LIMIT, `9` NOT_SUPPORT, `10` PARTIAL_OPERATION_FAILED, `11` UNREACHABLE.
+
+**Sizes / CRC** (lines 51–58): `OTA_VID 0x076E`, `OTA_PID 0x7033`; `OTA_BLOCK_LEN 512` (firmware payload bytes the device asks for per `0xE5`); `OTA_NEED_CRC 1` (so the device always requests a trailing CRC-32); `OTA_MTU_LEN` = **128 on BLE, 512 on SPP** — this caps the device's own notification size, not the 512-byte firmware block it pulls.
+
+**Per-opcode behaviour** (device side):
+- `0xE1 GET_FILE_INFO_OFFSET` (lines 618–631): replies `offset=0, len=sizeof(ota_file_header_t)=18` — i.e. "send me the 18-byte wrapper header."
+- `0xE2 INQUIRY_IF_CAN_UPDATE` (lines 633–677): the app sends those 18 header bytes; the device checks `vid/pid` against `OTA_VID/OTA_PID` → `result=0x02` on mismatch, else `result=0x03`. **It takes the whole-file length and CRC-32 straight from the wrapper header's `len`/`crc` fields** and stores them (`ota_file_len`, `ota_file_crc`) to verify at the end; a matching len+crc sets `ota_resume_flag` for resume. (This is why `ota_repack.py` must set the wrapper `len`/`crc` correctly.)
+- `0xE3 ENTER_UPDATE_MODE` (lines 679–694, 728–779): reply gives `offset = ota_file_offset + 18`, `len = OTA_BLOCK_LEN (512)`, `need_crc = 1`; starts/resumes the flash `ota_task`.
+- `0xE5 SEND_FIRMWARE_BLOCK` (cmd `firmware_block_cmd_param_t` = `SN`, `offset(4 BE)`, `data[]`, lines 253–257, 696–726, 809–871): the device computes `getcrc32(data)` and compares it to the trailing 4-byte **big-endian** CRC-32 (`STATUS`/log on mismatch, block dropped); the `offset` is absolute into the file (device subtracts the 18-byte header), data is written via `ota_task_write_ext`, and the reply hands back the next `(offset+18, block_len, delay_ms)`. `block_len=0, offset=0` signals completion; `delay_ms` becomes `1000` while SCO/A2DP is streaming (lines 702–704). A repeated `SN` is ignored (de-dup, lines 841–848).
+- `0xE6 GET_REFRESH_FIRMWARE_STATUS` (lines 873+): post-transfer status/commit.
+- `0x03 REBOOT` (`reboot_cmd_param_t` type `0`=reboot `1`=shutdown, lines 198–206).
+
+The device also advertises as name **`wq-ota`** with its VID in the manufacturer field when in the OTA/DFU state (`wq_adv_data_t`, lines 298–351) — a recognisable signature if we ever sniff a real update.
+
+## App-side upgrade state machine (`org.wuqi.android.sdk.upgrade`)
+
+Source only, from the decompiled QCY app `work/qcy-app-4.0.7-jadx/sources/org/wuqi/android/sdk/upgrade/`. The BLE transport is `UpgradeModeBle` (writes to the BLE channel via `BluetoothModeBle.write`; `UpgradeModeSpp` is the SPP sibling). The flow is a linear state machine (each state's `setState(new …)` gives the successor):
+
+```
+AttachDeviceInformationState   (0x02 device info: battery, TWS, isLeft, isDual)
+      → OffsetOTAState         (0xE1 get file-info offset)
+      → CanUpdateOTAState      (0xE2 can-update? → single vs double backup)
+          ├─ AskEnterUpgradeOTAState → DoubleOsOTAState   (0xE3 enter, 0xE5 data pump; dual-OS path)
+          └─ SingleOsOTAState                              (single-OS path)
+      → AskUpdateFinishState    (0xE6 refresh status)
+          ├─ SyncDeviceState    (0xE8 sync, dual TWS)
+          ├─ ChangeDeviceState  (0xE7 role switch, flash the other bud)
+          └─ RestartState       (0x03 reboot / commit)
+```
+
+`UpgradeOTADefine` (same package) carries only the UI message codes (`MESSAGE_UPGRADE_PROGRESS 100012`, `…_FINISH_SUCCESS 100000`, `…_FINISH_FAIL -100000`, etc.), not the wire opcodes — those live in the device-side enum above. The shipping QCY app drives this over **SPP `0x7034`**, not BLE; the `UpgradeModeBle` class exists but the app does not exercise it (see the channel note at the top of this file).
 
 The only Wuqi command that neither writes flash nor enters update mode. The SDK sends it ~1 s after connect, outside any OTA state.
 
