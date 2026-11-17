@@ -79,6 +79,6 @@ the tone image's only string is `MOqWr`; `WQ7036` / `QCY MeloBuds N70` actually 
 ## Open / next
 
 - Decode the NEW_ARCH `nplayer` "MOqW" tone container so prompt sounds can be rebuilt (needs the ADK NEW_ARCH tone sources or a UART flash dump); see [tone_prompts.md](tone_prompts.md).
-- Disassemble `qcy_app` on the app core and map the full A001 opcode dispatch, to cross-check [protocol.md](protocol.md) against the firmware.
+- ~~Disassemble `qcy_app` on the app core and map the full A001 opcode dispatch, to cross-check [protocol.md](protocol.md) against the firmware.~~ **Done** — see [patch_targets.md](patch_targets.md): A001 dispatcher at run `0x341965f4` (sparse-switch opcode ladder from `0x3419670e`); touch-function switch at `0x34174c4e` (firmware handles 9 funcIds the app hides, funcId 11 = ANC); undocumented write-only opcode `0xFF` = paired-device list; concrete flashable patch targets with file offsets + CRC handling via `ota_repack.py`.
 - LE Audio enablement: **answered – not feasible** (no LC3 codec, no ISO path, no LE Audio GATT profiles in the firmware; see above).
 - DSP image: Xtensa HiFi5, would need the right Xtensa config for clean disassembly.
