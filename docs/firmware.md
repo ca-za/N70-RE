@@ -66,7 +66,19 @@ CRC-32 is standard zlib. Magic, struct and the no-encryption/compression design 
 ```
 python3 -I tools/ota_unpack.py work/firmware-ht18-3.0.13/HT18-MP-V3.0.13-OTA.bin work/firmware-ht18-3.0.13/extracted
 ```
-Verifies both CRCs and writes the six decompressed images. The raw images are RISC-V firmware and can be loaded into Ghidra/radare2 (RISC-V, little-endian) at their `image_start_addr`.
+Verifies both CRCs and writes the six decompressed images plus a `manifest.json` (the metadata the repack tool needs: VID/PID, pack types, per-image start/end addresses). The raw images are RISC-V firmware and can be loaded into Ghidra/radare2 (RISC-V, little-endian) at their `image_start_addr`.
+
+## Repacking it
+
+[`tools/ota_repack.py`](../tools/ota_repack.py) is the inverse of the unpacker: it takes the extracted images (plus their `manifest.json`) and rebuilds a valid, flashable `.bin`. It LZMA-compresses each image with the same `FORMAT_ALONE` the unpacker decompresses with, recomputes every CRC (the two OTA-level CRCs and the big-endian wrapper CRC), and for any image carrying the `0xA4E49A17` guard it recomputes the per-image `iot_flash_image_header_t.crc` — **CRC-32 over the code bytes after the 32-byte header, byte count = `header.length`** (discovered by matching all five stock guarded images). So an in-place code patch becomes self-consistent with no manual CRC editing.
+
+```
+python3 -I tools/ota_repack.py <extracted_dir> <out.bin>          # metadata from manifest.json
+python3 -I tools/ota_repack.py <extracted_dir> <out.bin> --ref <stock.bin>   # if no manifest
+python3 -I tools/ota_repack.py --selftest work/firmware-ht18-3.0.13/HT18-MP-V3.0.13-OTA.bin
+```
+
+The `--selftest` unpacks the stock `.bin`, repacks it, unpacks the result, and asserts both OTA CRCs verify and every decompressed image is byte-identical to the stock extraction. That semantic round-trip passes. The whole file is **not** byte-identical to the stock `.bin` (WuQi's LZMA encoder differs from Python's, and our repack is actually a bit smaller), which is expected and does not matter — the device accepts images on guard-magic + CRC-32 only (no signature / secure boot, see [custom_firmware.md](custom_firmware.md)). This tool only writes a file; it never touches a device.
 
 ## What this gives us
 

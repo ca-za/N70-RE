@@ -19,9 +19,12 @@
 # SDK source (ota.h / ota.c). See docs/firmware.md.
 #
 # Usage:  python3 -I tools/ota_unpack.py <firmware.bin> [out_dir]
-# Writes one decompressed image per block and verifies both CRCs.
+# Writes one decompressed image per block and verifies both CRCs. It also writes
+# a manifest.json describing the non-reconstructible metadata (wrapper VID/PID,
+# pack_desc fields, per-image start/end addresses) so that tools/ota_repack.py
+# can rebuild a faithful, flashable .bin from the extracted images.
 
-import sys, os, struct, zlib, lzma
+import sys, os, struct, zlib, lzma, json
 
 MAGIC = 0xABCD6543
 NAMES = {  # roles confirmed from headers + strings (see docs/firmware_internals.md)
@@ -43,6 +46,14 @@ def main(argv):
         return 2
     print(f"file {len(argv[1])} bytes={len(data)}  pack_desc at 0x{off:x}"
           f"  (prefix {off} bytes = ota_file_header_t)")
+
+    # Big-endian ota_file_header_t wrapper (the bytes before pack_desc).
+    wrapper = None
+    if off >= 18:
+        w_vid, w_pid, w_ver = struct.unpack_from(">HHH", data, off - 18)
+        w_len, w_res, w_crc = struct.unpack_from(">III", data, off - 18 + 6)
+        wrapper = {"vid": w_vid, "pid": w_pid, "version": w_ver,
+                   "len": w_len, "reserved": w_res, "crc": w_crc}
 
     magic, fw_version, pack_types, ts = struct.unpack_from("<IIII", data, off)
     n = bin(pack_types).count("1")
@@ -67,6 +78,7 @@ def main(argv):
 
     os.makedirs(out_dir, exist_ok=True)
     o = comp_off
+    manifest_images = []
     for i, (isz, csz, sa, ea) in enumerate(descs):
         block = data[o:o + csz]
         o += csz
@@ -77,9 +89,27 @@ def main(argv):
             continue
         ok = "OK" if len(raw) == isz else f"size {len(raw)}!={isz}"
         name = NAMES.get(i, f"img{i}")
-        path = os.path.join(out_dir, f"{name}_0x{sa:08x}.bin")
+        fname = f"{name}_0x{sa:08x}.bin"
+        path = os.path.join(out_dir, fname)
         open(path, "wb").write(raw)
+        manifest_images.append({"index": i, "file": fname, "image_size": isz,
+                                "image_start_addr": sa, "image_end_addr": ea})
         print(f"img[{i}] start=0x{sa:08x} comp={csz} -> raw={len(raw)} {ok}  {path}")
+
+    # Sidecar manifest: everything ota_repack.py needs that is NOT recoverable
+    # from the extracted image files alone (addresses, pack types, VID/PID, ...).
+    manifest = {
+        "note": "metadata for tools/ota_repack.py; not an SDK structure",
+        "prefix_len": off,
+        "wrapper": wrapper,
+        "pack_desc": {"magic": MAGIC, "fw_version": fw_version,
+                      "image_pack_types": pack_types, "time_stamp": ts},
+        "images": manifest_images,
+    }
+    mpath = os.path.join(out_dir, "manifest.json")
+    with open(mpath, "w") as fh:
+        json.dump(manifest, fh, indent=2)
+    print(f"manifest -> {mpath}")
     return 0
 
 

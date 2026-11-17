@@ -32,7 +32,7 @@ Constraint: **no Windows PC available**, so `Wuqi.Beetle.Burn.exe` is out (barri
 
 ### Phase 0 — static, no hardware (in progress)
 - [x] Confirm no secure boot / no signing (above).
-- [ ] **Repack tool** `tools/ota_repack.py`: inverse of `ota_unpack.py`. Take modified raw images → recompute each per-image `iot_flash_image_header_t.crc` → LZMA-compress → rebuild `image_desc[]` → header CRC-32 → concat blocks → data CRC-32 → wrap `ota_file_header_t` (18 B, big-endian). Round-trip test: unpack→repack the stock image must reproduce a byte-identical, self-consistent file.
+- [x] **Repack tool** [`tools/ota_repack.py`](../tools/ota_repack.py): inverse of `ota_unpack.py`. Takes modified raw images → recomputes each per-image `iot_flash_image_header_t.crc` (CRC-32 over the code bytes after the 32-byte header, length = `header.length`; confirmed against all five stock guarded images) → LZMA-compresses (`FORMAT_ALONE`) → rebuilds `image_desc[]` → header CRC-32 → concat blocks → data CRC-32 → wraps `ota_file_header_t` (18 B, big-endian, `len` + CRC-32). `--selftest` proves the semantic round-trip: unpack→repack→unpack gives valid CRCs and byte-identical decompressed images. (Whole-file byte-identity with the stock `.bin` does **not** hold and is not needed — Python's LZMA encoder differs from WuQi's; the device checks only guard-magic + CRC-32.)
 - [ ] Map the **7033 OTA transport** precisely (chars 2001/2002, chunking, acks, the `OPCODE_OTA_*` state machine) from `app_wqota.c` + `ota_transport_ble.c` + the app. Best cross-check: a **BT HCI snoop log of a real OTA update** from the Android app (user can capture).
 - [ ] Continue disassembly of `qcy_app` (app core) to locate feature code worth changing.
 
