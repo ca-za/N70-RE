@@ -1,5 +1,25 @@
 # Tone / audio prompts — where they live and whether we can swap them
 
+## 0. Correction — the N70 DOES speak recorded phrases (device-confirmed)
+
+The owner confirms the N70 plays full spoken English phrases ("adaptive ANC on", "game
+mode on", "battery low, please charge"). So recorded/compressed **speech does exist on the
+device** — the earlier "synthesized-beeps-only" reading was wrong for the *spoken* prompts.
+
+Reconciliation: our file is an **OTA update package, not a full flash image**. The OTA
+carries only the 3.7 KB `0x3F0000` partition — **beeps/jingles** (power-on chime, button
+blips). The **spoken-phrase audio is factory-flashed into a flash region the OTA does not
+include** — one of the partitions the boot map lists with length 0 (candidates large
+enough for bilingual speech: the 1.4 MB `0x28B000` region, or the 32 KB `0x07` region at
+`0x3F4000`). Those bytes are simply **absent from our `.bin`**, which is why the static
+scan found no speech. So every "no voice anywhere on the chip" phrasing below means
+**"not in the OTA image."**
+
+**Consequence for the goal:** to extract or replace the **spoken** prompts we need a
+**full flash dump over UART** (ties into [custom_firmware.md](custom_firmware.md) and the
+Pro UART work). The in-OTA 3.7 KB partition only governs the beeps. §1–§6 below remain
+valid for *that* partition; read them with this correction in mind.
+
 Goal of this note: the user wants to **replace the earbuds' prompt sounds** ("swap the
 sounds"). This is a static (offline) investigation of the decompressed OTA image
 ([firmware.md](firmware.md), [firmware_internals.md](firmware_internals.md)) plus the
@@ -12,9 +32,10 @@ the *partition* level it is reachable with `ota_unpack` → edit → `ota_repack
 is no secure boot / signing to stop that ([custom_firmware.md](custom_firmware.md)).
 But the blob's **internal container format is not the documented WuQi tone layout and is
 not cleanly decoded**, so we cannot yet author a valid replacement clip that the firmware
-will play. There is **no separate multilingual voice-prompt partition** anywhere in the
-~4 MB flash — the "WQ00/WQ01/WQ02/WQ03 language packs" do not exist on this product as
-audio. Details and evidence below.
+will play. The 3.7 KB tone partition holds only **beeps/jingles**; the N70's **spoken**
+prompts (device-confirmed, see §0) are **factory-flashed into a flash region the OTA does
+not carry**, so they are absent from our `.bin` and need a live UART flash dump to obtain.
+Details and evidence below.
 
 ## 1. The full flash partition map ✅ (from the OTA boot map, img0)
 
@@ -41,11 +62,15 @@ Parsed in full:
 | `0x02` OEM | `0x3FE000` | 0 | 0 | `0x1000` | OEM / KV |
 | `0x09` | `0x3FF000` | 0 | 0 | `0x1000` | KV / NV |
 
-Flash ends at `0x400000` (~4 MB). **Key consequence:** the only non-empty data
-partition that can hold prompt audio is the 8 KB `0x3F0000` "tone" region with 3736
-bytes used. Every other data partition is empty or holds config/KV. There is **no
-megabyte-scale voice-prompt partition** — not in this OTA, and not anywhere on the chip.
-(The large empty `0x28B000` region is the OTA *download staging* area, not prompts.)
+Flash ends at `0x400000` (~4 MB). **Key consequence:** within the OTA image the only
+non-empty audio partition is the 8 KB `0x3F0000` "tone" region (3736 B) — the beeps. But
+the device speaks (§0), so the spoken-phrase audio lives in one of the partitions the boot
+map lists with length 0: empty *in the OTA package*, but factory-flashed on the real
+device. Candidates big enough for bilingual speech: the 1.4 MB `0x28B000` region (labelled
+OTA-staging here, but it may double as or neighbour the prompt store) or the 32 KB `0x07`
+region at `0x3F4000`. Which one can only be told from a live flash dump. (So the earlier
+"no voice partition anywhere on the chip" was wrong — correct: **not present in the OTA
+image.**)
 
 Note the boot-map image *type* for the tone region is the vendor-custom `0xC1`, **not**
 the SDK's `IMAGE_TYPE_TONE = 5`. So the "tone" name is positional/by-convention (it is
@@ -93,13 +118,13 @@ Codec/signature evidence:
 - The blob is **not** mSBC-framed in the obvious way (no 57-byte / `0xAD`-sync frame
   grid); its structure is 12-byte records, not codec frames.
 
-**Best-supported inference (not confirmed):** the N70 prompts are **short synthesized
-tones / beep melodies defined by small parameter records** (frequency / duration / gain),
-not recorded speech. This fits every observation: the tiny 3736-byte size, the round-number
-timing table, the 12-byte record structure, the absence of any audio container, and the
-fact that there is no room (and no partition) for multilingual voice. The alternative —
-a handful of very short mSBC clips — is not ruled out, but nothing positively supports it.
-Either way, **"the sounds" are contained in this one partition.**
+**Best-supported inference (not confirmed):** this 3.7 KB partition holds **short
+synthesized tones / beep melodies defined by small parameter records** (frequency /
+duration / gain) — the power-on chime and button blips — **not** the spoken phrases. This
+fits the tiny 3736-byte size, the round-number timing table, the 12-byte records and the
+absence of any audio container. The N70's **spoken** prompts (§0) are a *separate*, larger
+asset held in an un-dumped factory-flash region, **not** in this partition and **not** in
+the OTA image. So "the sounds" are split: **beeps here, speech elsewhere.**
 
 ## 3. How a prompt is selected (language / index)
 
@@ -110,11 +135,11 @@ Either way, **"the sounds" are contained in this one partition.**
 - **Language** is set via `player_set_language()` / `tone_storage_language_set()` and, at
   the app layer, `qcy_to_wuqi_language_set(language_id, name)`. The app core
   (`app_core_riscv_0x00169000.bin` @ file offset `0xA0120`) holds four 8-byte **name
-  tags** `WQ00 WQ01 WQ02 WQ03` — these are just *labels* reported up to the QCY app, with
-  **no per-language audio** behind them on this product (there is no space and no second
-  tone partition). So on the N70 the "language" control is effectively vestigial. ✅ that
-  the tags exist and are tied to the language handler; inferred that they map to no real
-  audio. A001 opcode for this is in [protocol.md](protocol.md).
+  tags** `WQ00 WQ01 WQ02 WQ03` tied to the language handler. Since the device does speak
+  (§0), these tags most likely **do** select real per-language speech assets — which live
+  in the un-dumped factory-flash region, not in the OTA image. (Earlier mis-inferred as
+  "vestigial / no audio"; corrected.) ✅ that the tags exist and are tied to the language
+  handler. A001 opcode for this is in [protocol.md](protocol.md).
 
 ## 4. Can we replace a sound by editing our OTA image? — verdict
 
@@ -168,9 +193,9 @@ add a real extractor.
 | Claim | Status |
 |---|---|
 | Full flash partition map (15 partitions, ends `0x400000`) | ✅ parsed from img0 boot map |
-| Only tone/prompt storage = `0x3F0000`, 3736 B, in OTA img5 | ✅ |
-| No separate multilingual voice-prompt partition exists | ✅ (whole 4 MB map accounted for) |
-| Tone partition is in-OTA and reachable via unpack/repack, no signing | ✅ |
-| Prompt select = event→tone_id; language = WQ00–WQ03 name tags, no per-lang audio | ✅ tags / ⟶ inferred no audio |
-| Tone blob codec/container | ⚠️ undocumented "MOqW" format; mSBC is SDK *source-only*, not confirmed; likely synthesized-tone params — **not decoded** |
+| Only *in-OTA* audio = `0x3F0000` 3736 B (beeps/jingles); spoken prompts are off-OTA | ✅ |
+| Spoken prompts present on device but absent from the OTA image (factory-flashed elsewhere) | ✅ device speaks (§0); not in OTA |
+| In-OTA tone partition reachable via unpack/repack, no signing | ✅ |
+| Prompt select = event→tone_id; language tags WQ00–WQ03 likely select real speech in un-dumped flash | ✅ tags / speech off-OTA |
+| In-OTA tone blob (beeps) codec/container | ⚠️ undocumented "MOqW" format; likely synthesized-tone params — **not decoded** |
 | Swap a sound by editing our OTA image | partition-level ✅ feasible; content-level ⚠️ blocked on decoding the tone container |
