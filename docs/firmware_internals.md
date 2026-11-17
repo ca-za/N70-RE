@@ -62,8 +62,23 @@ Where the chip's AI/DSP compute actually goes: **call noise reduction** (the "3-
 
 A whole command interface lives on service 7033 that the app never exposes — see [factory_cli.md](factory_cli.md). Documentation only; **7033 is write-forbidden** by project rules and many of its commands are destructive.
 
+## Tone / audio prompts
+
+Where the prompt sounds live, their (undocumented) format, and whether they can be
+swapped via our OTA image is worked out in [tone_prompts.md](tone_prompts.md). In short:
+one 8 KB tone partition at flash `0x3F0000` (3736 B used, OTA pack image #5), no separate
+voice-prompt partition anywhere in the ~4 MB flash, and the blob uses an undocumented
+"MOqW" container (not the SDK `tone_storage` layout) that is not yet decoded.
+
+**Correction to the image map above:** the row for img5 (`0x3F0000`) previously listed
+the strings `WQ7036` and `QCY MeloBuds N70` as living in the tone image. That is wrong —
+the tone image's only string is `MOqWr`; `WQ7036` / `QCY MeloBuds N70` actually live in the
+**app core** (img3) and the **config** partition (img4, `0x3EE000`). See
+[tone_prompts.md](tone_prompts.md) §2.
+
 ## Open / next
 
+- Decode the NEW_ARCH `nplayer` "MOqW" tone container so prompt sounds can be rebuilt (needs the ADK NEW_ARCH tone sources or a UART flash dump); see [tone_prompts.md](tone_prompts.md).
 - Disassemble `qcy_app` on the app core and map the full A001 opcode dispatch, to cross-check [protocol.md](protocol.md) against the firmware.
 - LE Audio enablement: **answered – not feasible** (no LC3 codec, no ISO path, no LE Audio GATT profiles in the firmware; see above).
 - DSP image: Xtensa HiFi5, would need the right Xtensa config for clean disassembly.

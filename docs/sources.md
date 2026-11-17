@@ -56,3 +56,5 @@ The development platform (SDK generations, toolchain, build/flash pipeline) and 
 | Custom EQ band format | OpenQCY/Quicky v2: freq,gain,Q,type | qcyx HT08: `[00, marker, freq, gain, 64]` | OpenQCY format ✅ |
 | `0x1F` | qcyx: auto power-off u16 | Quicky: standby 1 byte | 2 bytes in the blob |
 | ANC_RESULT `0x28` | qcyx: HT08 only | – | also sent by the N70 ✅ |
+
+**WuQi ADK tone storage (public GitHub, ZT210):** `core0/src/lib/play_controller/tone_storage/tone_storage.h` documents the *old-arch* tone bin layout (`iot_flash_image_header_t` + `tone_header_t` + `tone_table_t[M×12 B]` + data; codec enum = mSBC only) and `.../tone_play/play_tone.h`, `.../user_app/app_tone.{c,h}` the play/by-id/language API. Used to analyse the N70's tone partition in [tone_prompts.md](tone_prompts.md) — note the N70's actual blob does **not** match this old-arch layout (it uses an undocumented NEW_ARCH "MOqW" container), so this source bounds but does not decode it. `tone.json` / `audmap_config.json` in `core0/src/customer/*/prebuild/` show the id→name tone map and audio-path config but the snapshot ships **no** WAV→`tone.bin` build script.
