@@ -50,6 +50,23 @@ The full development-platform + earbud-architecture picture is consolidated in [
 
 **Custom firmware is being actively pursued** ([custom_firmware.md](custom_firmware.md)): the N70 has **no secure boot and no image signing** (boot checks only the guard magic `0xA4E49A17`; OTA checks only magic + CRC-32; shipping images are unsigned, `tlv_count=0`). So a repacked, modified image with valid CRC-32s will boot — custom firmware is feasible at the binary level, flashable over OTA (service 7033) or single-wire UART, with a UART read-back as the recovery net.
 
+## Open next steps (state 2026-11-20)
+
+**Extend the touch keys (no flashing needed, probably).** The firmware's touch-function switch implements 16 funcIds; the app exposes only 9. Hidden funcIds: 8, 9, 10, 16, 17, 18, 21, 22, 23 (details + patch points in [patch_targets.md](patch_targets.md), source: static disassembly, not device-verified). Next:
+1. Statically trace what each hidden funcId actually does (rule out power-off / factory reset / pairing wipe).
+2. Isolate the char `000D` write handler: does it range-check funcId?
+3. Only then, with the user's go-ahead: test harmless ones via a raw `000D` write `[eventID, funcId]` — save original mapping, write, read back, restore.
+
+**Swap sounds.** Spoken prompts ("adaptive ANC on", "battery low…") are factory-flashed outside the OTA image; beeps are in the in-OTA "MOqW" container (undecoded). Both need a UART flash dump first — see [tone_prompts.md](tone_prompts.md).
+
+**MeloBuds Pro as UART rig (sacrificial unit, user-authorised).** Opened, PCB shows >10 test pads. Next hardware session (user present): classify pads with a multimeter (GND by continuity, VBAT/rails by DC volts, rest = UART/single-wire candidates), then listen read-only with [`tools/uart_listen.py`](../tools/uart_listen.py) (never transmits; baud sweep 115200 / 921600 / 1500000 / 2000000 / 3000000). WuQi UART may be 1.8 V — check the adapter or use a level shifter. Nice to have: 8-ch logic analyzer, a spare N70.
+
+**Pulse from the in-ear (feedback) ANC mic — idea, undecided.** Physically plausible: occlusion effect; Google's APG (2023) measures heart rate via the ANC feedback mic; Martin & Voix (IEEE TBME 2018) got heart/breathing rate from an in-ear mic. The N70 already uses the feedback mic for fit detection (opcode `0x11`). But stock firmware only exposes the outer, noise-suppressed HFP mic, so this needs a DSP-image (Xtensa HiFi5) patch to route the raw feedback mic or compute BPM on-device. Possible cheap pre-test: record HFP audio on the Mac with the bud in the ear and look for a ~1 Hz component (likely filtered out). Possible worker: scout the DSP image for the feedback-mic / fit-detection path.
+
+**User-side, async:** an Android HCI snoop log of a real OTA update + a control session would sharpen [ota.md](ota.md).
+
+Out of scope by user decision: LC3 / new codecs (not feasible), call-quality/ENC work (user is happy with the mic).
+
 ## Related
 
 - LDAC from a Mac: macOS only does SBC/AAC; a custom A2DP/AVDTP over IOBluetooth L2CAP might work (unverified).
